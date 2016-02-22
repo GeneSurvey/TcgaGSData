@@ -17,6 +17,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import org.mda.bcb.tcgagsdata.CallFromR;
 
 /**
  *
@@ -24,8 +25,8 @@ import static org.junit.Assert.*;
  */
 public class MetadataMirTest
 {
-	public String mDir = "/mnt/hgfs/code/development/TcgaGSData/";
-	public MetadataMir mTest = null;
+	public String mDir = "/mnt/hgfs/code/development/GENE_REPORT_2015_12_11.zip";
+	public CallFromR mTest = null;
 	
 	public MetadataMirTest()
 	{
@@ -44,7 +45,7 @@ public class MetadataMirTest
 	@Before
 	public void setUp()
 	{
-		mTest = new MetadataMir(new File(mDir, "data").getAbsolutePath());
+		mTest = new CallFromR(mDir);
 	}
 	
 	@After
@@ -59,8 +60,7 @@ public class MetadataMirTest
 	public void testGetMirList() throws Exception
 	{
 		System.out.println("getMirList");
-		MetadataMir instance = mTest;
-		String[] result = instance.getMirList();
+		String[] result = mTest.getMirList();
 		assertTrue(result.length>0);
 	}
 
@@ -71,8 +71,7 @@ public class MetadataMirTest
 	public void testGetMimatList() throws Exception
 	{
 		System.out.println("getMimatList");
-		MetadataMir instance = mTest;
-		String[] result = instance.getMimatList();
+		String[] result = mTest.getMimatList();
 		assertTrue(result.length>0);
 	}
 
@@ -83,29 +82,28 @@ public class MetadataMirTest
 	public void testGetMetadata_miRNA_mir() throws Exception
 	{
 		System.out.println("getMetadata_miRNA_mir");
-		MetadataMir instance = mTest;
 		{
 			String theMirId = "hsa-let-7d";
 			String expResult = "MI0000065";
-			MetadataMir[] result = instance.getMetadata_miRNA_mir(theMirId);
+			MetadataMir[] result = mTest.getMetadata_miRNA_mir(theMirId);
 			assertEquals(expResult, result[0].mMimatId);
 		}
 		{
 			String theMirId = "hsa-let-7a-1";
 			String expResult = "MI0000060";
-			MetadataMir[] result = instance.getMetadata_miRNA_mir(theMirId);
+			MetadataMir[] result = mTest.getMetadata_miRNA_mir(theMirId);
 			assertEquals(expResult, result[0].mMimatId);
 		}
 		{
 			String theMirId = "hsa-mir-99b";
 			String expResult = "MI0000746";
-			MetadataMir[] result = instance.getMetadata_miRNA_mir(theMirId);
+			MetadataMir[] result = mTest.getMetadata_miRNA_mir(theMirId);
 			assertEquals(expResult, result[0].mMimatId);
 		}
 		{
 			String theMirId = "hsa-let-7a-5p";
 			String expResult = "MIMAT0000062";
-			MetadataMir[] result = instance.getMetadata_miRNA_mir(theMirId);
+			MetadataMir[] result = mTest.getMetadata_miRNA_mir(theMirId);
 			assertEquals(expResult, result[0].mMimatId);
 		}
 		
@@ -119,17 +117,15 @@ public class MetadataMirTest
 	{
 		System.out.println("getMetadata_miRNA_mimat");
 		{
-			MetadataMir instance = mTest;
 			String theMimatId = "MIMAT0000098";
 			String expResult = "hsa-miR-100-5p";
-			MetadataMir[] result = instance.getMetadata_miRNA_mimat(theMimatId);
+			MetadataMir[] result = mTest.getMetadata_miRNA_mimat(theMimatId);
 			assertEquals(expResult, result[0].mMirId);
 		}
 		{
-			MetadataMir instance = mTest;
 			String theMimatId = "MIMAT0000062_1";
 			String expResult = "hsa-let-7a-5p";
-			MetadataMir[] result = instance.getMetadata_miRNA_mimat(theMimatId);
+			MetadataMir[] result = mTest.getMetadata_miRNA_mimat(theMimatId);
 			assertEquals(expResult, result[0].mMirId);
 		}
 	}

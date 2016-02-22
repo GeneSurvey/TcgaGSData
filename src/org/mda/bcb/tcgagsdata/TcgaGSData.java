@@ -47,9 +47,10 @@ public class TcgaGSData
 		}
 	}
 
-	public static void printVersion()
+	public static String printVersion()
 	{
-		TcgaGSData.printWithFlag("TcgaGSData 2015-09-30-1325");
+		TcgaGSData.printWithFlag("TcgaGSData 2016-01-11-1250");
+		return "TcgaGSData 2016-01-11-1250";
 	}
 
 	//TESTmain main

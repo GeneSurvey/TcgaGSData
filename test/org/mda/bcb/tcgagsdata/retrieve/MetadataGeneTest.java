@@ -10,16 +10,14 @@ You should have received a copy of the GNU General Public License along with thi
 
 package org.mda.bcb.tcgagsdata.retrieve;
 
-import java.io.File;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import org.mda.bcb.tcgagsdata.CallFromR;
 
 /**
  *
@@ -27,8 +25,8 @@ import static org.junit.Assert.*;
  */
 public class MetadataGeneTest
 {
-	public String mDir = "/mnt/hgfs/code/development/TcgaGSData/";
-	public MetadataGene mTest = null;
+	public String mDir = "/mnt/hgfs/code/development/GENE_REPORT_2015_12_11.zip";
+	public CallFromR mTest = null;
 	
 	public MetadataGeneTest()
 	{
@@ -47,7 +45,7 @@ public class MetadataGeneTest
 	@Before
 	public void setUp()
 	{
-		mTest = new MetadataGene(new File(mDir, "data").getAbsolutePath());
+		mTest = new CallFromR(mDir);
 	}
 	
 	@After
@@ -64,8 +62,7 @@ public class MetadataGeneTest
 		System.out.println("getMetadataList_RNASeq");
 		for (String theStandardizedDataId : Arrays.asList("SNORD116-19" , "CT45A4" ))
 		{
-			MetadataGene instance = mTest;
-			MetadataGene[] result = instance.getMetadataList_RNASeq(theStandardizedDataId);
+			MetadataGene[] result = mTest.getMetadataList_RNASeq(theStandardizedDataId);
 			assertNotNull(result);
 			assertTrue(result.length>0);
 			for(MetadataGene mdg : result)
@@ -84,8 +81,7 @@ public class MetadataGeneTest
 		System.out.println("getMetadataList_RNASeqV2");
 		for (String theStandardizedDataId : Arrays.asList("SNORD116-19" , "CT45A4" ))
 		{
-			MetadataGene instance = mTest;
-			MetadataGene[] result = instance.getMetadataList_RNASeqV2(theStandardizedDataId);
+			MetadataGene[] result = mTest.getMetadataList_RNASeqV2(theStandardizedDataId);
 			assertNotNull(result);
 			assertTrue(result.length>0);
 			for(MetadataGene mdg : result)
@@ -104,8 +100,7 @@ public class MetadataGeneTest
 		System.out.println("getMetadataList_HG18");
 		for (String theStandardizedDataId : Arrays.asList("5S_rRNA|17|ENSG00000222811" , "TP53" ))
 		{
-			MetadataGene instance = mTest;
-			MetadataGene[] result = instance.getMetadataList_HG18(theStandardizedDataId);
+			MetadataGene[] result = mTest.getMetadataList_HG18(theStandardizedDataId);
 			assertNotNull(result);
 			assertTrue(result.length>0);
 			for(MetadataGene mdg : result)
@@ -122,10 +117,9 @@ public class MetadataGeneTest
 	public void testGetMetadataList_HG19() throws Exception
 	{
 		System.out.println("getMetadataList_HG19");
-		for (String theStandardizedDataId : Arrays.asList("5S_rRNA|2" , "TP53" ))
+		for (String theStandardizedDataId : Arrays.asList("5S_rRNA|X|ENSG00000201285" , "TP53" ))
 		{
-			MetadataGene instance = mTest;
-			MetadataGene[] result = instance.getMetadataList_HG19(theStandardizedDataId);
+			MetadataGene[] result = mTest.getMetadataList_HG19(theStandardizedDataId);
 			assertNotNull(result);
 			assertTrue(result.length>0);
 			for(MetadataGene mdg : result)

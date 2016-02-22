@@ -10,13 +10,13 @@ You should have received a copy of the GNU General Public License along with thi
 
 package org.mda.bcb.tcgagsdata.retrieve;
 
-import java.io.File;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import org.mda.bcb.tcgagsdata.CallFromR;
 
 /**
  *
@@ -24,8 +24,8 @@ import static org.junit.Assert.*;
  */
 public class GetNamesGeneEqTest
 {
-	public String mDir = "/mnt/hgfs/code/development/TcgaGSData/";
-	public GetNamesGeneEq mTest = null;
+	public String mDir = "/mnt/hgfs/code/development/GENE_REPORT_2015_12_11.zip";
+	public CallFromR mTest = null;
 
 	public GetNamesGeneEqTest()
 	{
@@ -44,7 +44,7 @@ public class GetNamesGeneEqTest
 	@Before
 	public void setUp()
 	{
-		mTest = new GetNamesGeneEq(new File(mDir, "combined").getAbsolutePath());
+		mTest = new CallFromR(mDir);
 	}
 	
 	@After
@@ -59,10 +59,8 @@ public class GetNamesGeneEqTest
 	public void testGetNames_RnaSeq2() throws Exception
 	{
 		System.out.println("getNames_RnaSeq2");
-		GetNamesGeneEq instance = mTest;
-		boolean expResult = true;
-		boolean result = instance.getNames_RnaSeq2();
-		assertEquals(expResult, result);
+		String [] results = mTest.getNames_RnaSeq2();
+		assertNotNull(results);
 	}
 
 	/**
@@ -72,10 +70,8 @@ public class GetNamesGeneEqTest
 	public void testGetNames_RnaSeq() throws Exception
 	{
 		System.out.println("getNames_RnaSeq");
-		GetNamesGeneEq instance = mTest;
-		boolean expResult = true;
-		boolean result = instance.getNames_RnaSeq();
-		assertEquals(expResult, result);
+		String [] results = mTest.getNames_RnaSeq();
+		assertNotNull(results);
 	}
 
 	/**
@@ -85,10 +81,8 @@ public class GetNamesGeneEqTest
 	public void testGetNames_SNP6() throws Exception
 	{
 		System.out.println("getNames_SNP6");
-		GetNamesGeneEq instance = mTest;
-		boolean expResult = true;
-		boolean result = instance.getNames_SNP6();
-		assertEquals(expResult, result);
+		String [] results = mTest.getNames_SNP6();
+		assertNotNull(results);
 	}
 
 	/**
@@ -98,10 +92,8 @@ public class GetNamesGeneEqTest
 	public void testGetNames_Meth450() throws Exception
 	{
 		System.out.println("getNames_Meth450");
-		GetNamesGeneEq instance = mTest;
-		boolean expResult = true;
-		boolean result = instance.getNames_Meth450();
-		assertEquals(expResult, result);
+		String [] results = mTest.getNames_Meth450();
+		assertNotNull(results);
 	}
 
 	/**
@@ -111,10 +103,8 @@ public class GetNamesGeneEqTest
 	public void testGetNames_Meth27() throws Exception
 	{
 		System.out.println("getNames_Meth27");
-		GetNamesGeneEq instance = mTest;
-		boolean expResult = true;
-		boolean result = instance.getNames_Meth27();
-		assertEquals(expResult, result);
+		String [] results = mTest.getNames_Meth27();
+		assertNotNull(results);
 	}
 
 	/**
@@ -124,9 +114,7 @@ public class GetNamesGeneEqTest
 	public void testGetNames_miRNASeq() throws Exception
 	{
 		System.out.println("getNames_miRNASeq");
-		GetNamesGeneEq instance = mTest;
-		boolean expResult = true;
-		boolean result = instance.getNames_miRNASeq();
-		assertEquals(expResult, result);
+		String [] results = mTest.getNames_miRNASeq();
+		assertNotNull(results);
 	}
 }

@@ -10,20 +10,16 @@ You should have received a copy of the GNU General Public License along with thi
 
 package org.mda.bcb.tcgagsdata.retrieve;
 
-import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
+import org.mda.bcb.tcgagsdata.ReadZipFile;
 import org.mda.bcb.tcgagsdata.TcgaGSData;
 
 /**
  *
  * @author tdcasasent
  */
-public class GetDataClinical
+public class GetDataClinical extends ReadZipFile
 {
 	protected static String M_PATH = null;
 	protected static String [][] M_GENES_BY_SAMPLES_VALUES = null;
@@ -32,19 +28,23 @@ public class GetDataClinical
 	public String [][] mGenesBySamplesValues = null;
 	public String [] mPatientIds = null;
 	public String [] mColumnLabels = null;
-		
-	public GetDataClinical(String thePath)
+	//
+	protected String [] mColumns = null;
+	protected ArrayList<String> mLines = new ArrayList<>();
+
+	public GetDataClinical(String theZipFile)
 	{
-		if (false==thePath.equals(M_PATH))
+		super(theZipFile);
+		if (false==theZipFile.equals(M_PATH))
 		{
-			M_PATH = thePath;
+			M_PATH = theZipFile;
 			M_GENES_BY_SAMPLES_VALUES = null;
 			M_COLUMN_LABELS = null;
 			M_PATIENT_IDS = null;
 		}
 	}
 
-	public boolean getDataClinical() throws IOException, Exception
+	public boolean getDataClinical(String theInternalPath) throws IOException, Exception
 	{
 		TcgaGSData.printVersion();
 		boolean found = false;
@@ -56,47 +56,35 @@ public class GetDataClinical
 			mColumnLabels = null;
 			if (null==M_GENES_BY_SAMPLES_VALUES)
 			{
-				File input = new File(M_PATH, "combined_clinical.tsv");
-				if (input.exists())
+				mColumns = null;
+				mLines = new ArrayList<>();
+				processFile(theInternalPath);
+				int patientCount = mLines.size();
+				int columnCount = mColumns.length - 1;
+				M_COLUMN_LABELS = new String[columnCount];
+				for(int x=1;x<=columnCount;x++)
 				{
-					ArrayList<String> lines = new ArrayList<>();
-					try(BufferedReader br = Files.newBufferedReader(
-							Paths.get(input.getAbsolutePath()),
-							Charset.availableCharsets().get("ISO-8859-1")))
+					M_COLUMN_LABELS[x-1] = mColumns[x];
+				}
+				M_PATIENT_IDS = new String[patientCount];
+				M_GENES_BY_SAMPLES_VALUES = new String[patientCount][columnCount];
+				for(int x = 0; x<patientCount; x++)
+				{
+					String [] splitted = mLines.get(x).split("\t", -1);
+					if (splitted.length<=columnCount)
 					{
-						found = true;
-						String [] columns = br.readLine().split("\t", -1);
-						for (String line = br.readLine(); null != line; line = br.readLine())
-						{
-							lines.add(line);
-						}
-						int patientCount = lines.size();
-						int columnCount = columns.length - 1;
-						M_COLUMN_LABELS = new String[columnCount];
-						for(int x=1;x<=columnCount;x++)
-						{
-							M_COLUMN_LABELS[x-1] = columns[x];
-						}
-						M_PATIENT_IDS = new String[patientCount];
-						M_GENES_BY_SAMPLES_VALUES = new String[patientCount][columnCount];
-						for(int x = 0; x<patientCount; x++)
-						{
-							String [] splitted = lines.get(x).split("\t", -1);
-							if (splitted.length<=columnCount)
-							{
-								throw new Exception("Column count does not match. Found " + splitted.length + 
-										" but expected " + columnCount +". For line\n" + lines.get(x));
-							}
-							M_PATIENT_IDS[x] = splitted[0];
-							for(int y=1;y<=columnCount;y++)
-							{
-								System.out.println("y is " + y + " and splitted is " + splitted.length + " long");
-								String myY = splitted[y];
-								M_GENES_BY_SAMPLES_VALUES[x][y-1] = myY;
-							}
-						}
+						throw new Exception("Column count does not match. Found " + splitted.length + 
+								" but expected " + columnCount +". For line\n" + mLines.get(x));
+					}
+					M_PATIENT_IDS[x] = splitted[0];
+					for(int y=1;y<=columnCount;y++)
+					{
+						//System.out.println("y is " + y + " and splitted is " + splitted.length + " long");
+						String myY = splitted[y];
+						M_GENES_BY_SAMPLES_VALUES[x][y-1] = myY;
 					}
 				}
+				found = true;
 			}
 			else
 			{
@@ -124,5 +112,19 @@ public class GetDataClinical
 			throw exp;
 		}
 		return found;
+	}
+
+	@Override
+	protected boolean processLine(String theLine)
+	{
+		if (null==mColumns)
+		{
+			mColumns = theLine.split("\t", -1);
+		}
+		else
+		{
+			mLines.add(theLine);
+		}
+		return true;
 	}
 }

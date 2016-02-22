@@ -17,6 +17,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import org.mda.bcb.tcgagsdata.CallFromR;
 
 /**
  *
@@ -24,8 +25,8 @@ import static org.junit.Assert.*;
  */
 public class MetadataProbeTest
 {
-	public String mDir = "/mnt/hgfs/code/development/TcgaGSData/";
-	public MetadataProbe mTest = null;
+	public String mDir = "/mnt/hgfs/code/development/GENE_REPORT_2015_12_11.zip";
+	public CallFromR mTest = null;
 	
 	public MetadataProbeTest()
 	{
@@ -44,7 +45,7 @@ public class MetadataProbeTest
 	@Before
 	public void setUp()
 	{
-		mTest = new MetadataProbe(new File(mDir, "data").getAbsolutePath());
+		mTest = new CallFromR(mDir);
 	}
 	
 	@After
@@ -60,11 +61,8 @@ public class MetadataProbeTest
 	{
 		System.out.println("getMetadata_Meth27");
 		String theProbe = "cg00000292";
-		MetadataProbe instance = mTest;
-		boolean expResult = true;
-		boolean result = instance.getMetadata_Meth27(theProbe);
-		assertEquals(expResult, result);
-		assertEquals(theProbe, instance.mName);
+		MetadataProbe result = mTest.getMetadata_Meth27(theProbe);
+		assertEquals(theProbe, result.mName);
 	}
 
 	/**
@@ -75,10 +73,7 @@ public class MetadataProbeTest
 	{
 		System.out.println("getMetadata_Meth450");
 		String theProbe = "cg00000029";
-		MetadataProbe instance = mTest;
-		boolean expResult = true;
-		boolean result = instance.getMetadata_Meth450(theProbe);
-		assertEquals(expResult, result);
-		assertEquals(theProbe, instance.mName);
+		MetadataProbe result = mTest.getMetadata_Meth450(theProbe);
+		assertEquals(theProbe, result.mName);
 	}
 }

@@ -10,22 +10,18 @@ You should have received a copy of the GNU General Public License along with thi
 
 package org.mda.bcb.tcgagsdata.retrieve;
 
-import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.TreeSet;
+import org.mda.bcb.tcgagsdata.ReadZipFile;
 import org.mda.bcb.tcgagsdata.TcgaGSData;
 
 /**
  *
  * @author tdcasasent
  */
-public class GetMapGeneEq
+public class GetMapGeneEq extends ReadZipFile
 {
 	protected static String M_PATH = null;
 	protected static int M_M450_SIZE = 0;
@@ -34,13 +30,22 @@ public class GetMapGeneEq
 	protected static int M_M27_SIZE = 0;
 	protected static String [] M_M27_GENES = null;
 	protected static String [] M_M27_GENE_EQ = null;
+	//
+	protected boolean mFirstLine = true;
+	protected int mIndexGene = -1;
+	protected int mIndexProbe = -1;
+	protected String mGeneHeader = null;
+	protected String mProbeHeader = null;
+	protected ArrayList<String> mProbeList = null;
+	protected ArrayList<String> mGeneList = null;
 
-	public GetMapGeneEq(String thePath)
+	public GetMapGeneEq(String theZipFile)
 	{
+		super(theZipFile);
 		TcgaGSData.printVersion();
-		if (false==thePath.equals(M_PATH))
+		if (false==theZipFile.equals(M_PATH))
 		{
-			M_PATH = thePath;
+			M_PATH = theZipFile;
 			M_M450_SIZE = 0;
 			M_M450_GENES = null;
 			M_M450_GENE_EQ = null;
@@ -50,11 +55,11 @@ public class GetMapGeneEq
 		}
 	}
 
-	public String [] getMapping_Meth450(String theGene) throws IOException
+	public String [] getMapping_Meth450(String theGene, String theInternalPath) throws IOException
 	{
 		try
 		{
-			return getMapping450("meth450map.tsv", "IlmnID", "UCSC_RefGene_Name", theGene);
+			return getMapping450(theInternalPath, "IlmnID", "UCSC_RefGene_Name", theGene);
 		}
 		catch(Exception exp)
 		{
@@ -69,11 +74,11 @@ public class GetMapGeneEq
 		}
 	}
 
-	public String [] getMapping_Meth27(String theGene) throws IOException
+	public String [] getMapping_Meth27(String theGene, String theInternalPath) throws IOException
 	{
 		try
 		{
-			return getMapping27("meth27map.tsv", "probe_id", "gene_id", theGene);
+			return getMapping27(theInternalPath, "probe_id", "gene_id", theGene);
 		}
 		catch(Exception exp)
 		{
@@ -88,13 +93,13 @@ public class GetMapGeneEq
 		}
 	}
 
-	public String [] getMappingGeneSymbols_Meth450() throws IOException
+	public String [] getMappingGeneSymbols_Meth450(String theInternalPath) throws IOException
 	{
 		try
 		{
 			if (null==M_M450_GENES)
 			{
-				ArrayList<ArrayList<String>> results = readFile("meth450map.tsv", "IlmnID", "UCSC_RefGene_Name");
+				ArrayList<ArrayList<String>> results = readFile(theInternalPath, "IlmnID", "UCSC_RefGene_Name");
 				M_M450_SIZE = results.get(0).size();
 				M_M450_GENES = results.get(1).toArray(new String[0]);
 				M_M450_GENE_EQ = results.get(0).toArray(new String[0]);
@@ -114,13 +119,13 @@ public class GetMapGeneEq
 		return M_M450_GENES;
 	}
 
-	public String [] getMappingGeneSymbols_Meth27() throws IOException
+	public String [] getMappingGeneSymbols_Meth27(String theInternalPath) throws IOException
 	{
 		try
 		{
 			if (null==M_M27_GENES)
 			{
-				ArrayList<ArrayList<String>> results = readFile("meth27map.tsv", "probe_id", "gene_id");
+				ArrayList<ArrayList<String>> results = readFile(theInternalPath, "probe_id", "gene_id");
 				M_M27_SIZE = results.get(0).size();
 				M_M27_GENES = results.get(1).toArray(new String[0]);
 				M_M27_GENE_EQ = results.get(0).toArray(new String[0]);
@@ -142,53 +147,30 @@ public class GetMapGeneEq
 	
 	////////////////////////////////////////////////////////////////////////////
 	
-	protected ArrayList<ArrayList<String>> readFile(String theFile, 
+	protected ArrayList<ArrayList<String>> readFile(String theInternalPath, 
 			String theProbeHeader, String theGeneHeader) throws IOException
 	{
-		ArrayList<String> probeList = new ArrayList<>();
-		ArrayList<String> geneList = new ArrayList<>();
-		File input = new File(M_PATH, theFile);
-		try(BufferedReader br = Files.newBufferedReader(
-				Paths.get(input.getAbsolutePath()),
-				Charset.availableCharsets().get("ISO-8859-1")))
-		{
-			String line = br.readLine();
-			String [] headers = line.split("\t", -1);
-			int indexGene = Arrays.asList(headers).indexOf(theGeneHeader);
-			int indexProbe = Arrays.asList(headers).indexOf(theProbeHeader);
-			line = br.readLine();
-			while(null!=line)
-			{
-				String [] value = line.split("\t", -1);
-				String probe = value[indexProbe];
-				String genes = value[indexGene];
-				if ((!"".equals(probe)) && (!"".equals(genes)))
-				{
-					for(String myGene : genes.split(";", -1))
-					{
-						if (!"".equals(myGene))
-						{
-							probeList.add(probe);
-							geneList.add(myGene);
-						}
-					}
-				}
-				line = br.readLine();
-			}
-		}
+		mProbeList = new ArrayList<>();
+		mGeneList = new ArrayList<>();
+		mFirstLine = true;
+		mIndexGene = -1;
+		mIndexProbe = -1;
+		mGeneHeader = theGeneHeader;
+		mProbeHeader = theProbeHeader;
+		processFile(theInternalPath);
 		ArrayList<ArrayList<String>> results = new ArrayList<>();
-		results.add(probeList);
-		results.add(geneList);
+		results.add(mProbeList);
+		results.add(mGeneList);
 		return results;
 	}
 
-	protected String [] getMapping450(String theFile, 
+	protected String [] getMapping450(String theInternalPath, 
 			String theProbeHeader, String theGeneHeader, String theGene) throws IOException
 	{
 		long start = System.currentTimeMillis();
 		if (null==M_M450_GENES)
 		{
-			ArrayList<ArrayList<String>> results = readFile(theFile, theProbeHeader, theGeneHeader);
+			ArrayList<ArrayList<String>> results = readFile(theInternalPath, theProbeHeader, theGeneHeader);
 			M_M450_SIZE = results.get(0).size();
 			M_M450_GENES = results.get(1).toArray(new String[0]);
 			M_M450_GENE_EQ = results.get(0).toArray(new String[0]);
@@ -206,13 +188,13 @@ public class GetMapGeneEq
 		return results;
 	}
 	
-	protected String [] getMapping27(String theFile, 
+	protected String [] getMapping27(String theInternalPath, 
 			String theProbeHeader, String theGeneHeader, String theGene) throws IOException
 	{
 		long start = System.currentTimeMillis();
 		if (null==M_M27_GENES)
 		{
-			ArrayList<ArrayList<String>> results = readFile(theFile, theProbeHeader, theGeneHeader);
+			ArrayList<ArrayList<String>> results = readFile(theInternalPath, theProbeHeader, theGeneHeader);
 			M_M27_SIZE = results.get(0).size();
 			M_M27_GENES = results.get(1).toArray(new String[0]);
 			M_M27_GENE_EQ = results.get(0).toArray(new String[0]);
@@ -251,5 +233,35 @@ public class GetMapGeneEq
 	}
 
 	////////////////////////////////////////////////////////////////////////////
+	
+	@Override
+	protected boolean processLine(String theLine)
+	{
+		if (true==mFirstLine)
+		{
+			String [] headers = theLine.split("\t", -1);
+			mIndexGene = Arrays.asList(headers).indexOf(mGeneHeader);
+			mIndexProbe = Arrays.asList(headers).indexOf(mProbeHeader);
+			mFirstLine = false;
+		}
+		else
+		{
+			String [] value = theLine.split("\t", -1);
+			String probe = value[mIndexProbe];
+			String genes = value[mIndexGene];
+			if ((!"".equals(probe)) && (!"".equals(genes)))
+			{
+				for(String myGene : genes.split(";", -1))
+				{
+					if (!"".equals(myGene))
+					{
+						mProbeList.add(probe);
+						mGeneList.add(myGene);
+					}
+				}
+			}
+		}
+		return true;
+	}
 
 }

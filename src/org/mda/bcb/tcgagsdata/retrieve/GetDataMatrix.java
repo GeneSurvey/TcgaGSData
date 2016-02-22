@@ -28,48 +28,13 @@ public class GetDataMatrix
 	public String [] mSamples = null;
 	public String [] mGenes = null;
 
-	public GetDataMatrix(String thePath)
+	public GetDataMatrix(String theZipFile)
 	{
 		TcgaGSData.printVersion();
-		mPath = thePath;
+		mPath = theZipFile;
 	}
 
-	public boolean getDataMatrix_Mutations(String [] theGenes) throws IOException
-	{
-		return getDataMatrix(theGenes, "mutations");
-	}
-
-	public boolean getDataMatrix_RnaSeq2(String [] theGenes) throws IOException
-	{
-		return getDataMatrix(theGenes, "illuminahiseq_rnaseqv2_gene");
-	}
-
-	public boolean getDataMatrix_RnaSeq(String [] theGenes) throws IOException
-	{
-		return getDataMatrix(theGenes, "illuminahiseq_rnaseq_uncGeneRPKM");
-	}
-
-	public boolean getDataMatrix_SNP6(String [] theGenes) throws IOException
-	{
-		return getDataMatrix(theGenes, "genome_wide_snp_6_hg19nocnvWxy");
-	}
-
-	public boolean getDataMatrix_Meth450(String [] theGenes) throws IOException
-	{
-		return getDataMatrix(theGenes, "humanmethylation450_level3");
-	}
-
-	public boolean getDataMatrix_Meth27(String [] theGenes) throws IOException
-	{
-		return getDataMatrix(theGenes, "humanmethylation27_hg19Wxy");
-	}
-
-	public boolean getDataMatrix_miRNASeq(String [] theGenes) throws IOException
-	{
-		return getDataMatrix(theGenes, "illuminahiseq_mirnaseq_isoform");
-	}
-
-	public boolean getDataMatrix(String [] theGenes, String thePlatform) throws IOException
+	public boolean getDataMatrix(String [] theGenes, String theInternalPath, String theNamesInternalPath) throws IOException
 	{
 		mSampleSize = 0;
 		mGenesSize = 0;
@@ -81,7 +46,7 @@ public class GetDataMatrix
 		// get list of genes
 		{
 			GetNamesGeneEq lg = new GetNamesGeneEq(mPath);
-			lg.getNamesGenes(thePlatform);
+			lg.getNamesGenes(theNamesInternalPath);
 			TreeSet<String> allGenes = new TreeSet<>();
 			allGenes.addAll(Arrays.asList(lg.mGenes));
 			TreeSet<String> ts = new TreeSet<>();
@@ -89,12 +54,12 @@ public class GetDataMatrix
 			{
 				if (allGenes.contains(gene))
 				{
-					TcgaGSData.printWithFlag("Gene " + gene + " found in " + thePlatform);
+					TcgaGSData.printWithFlag("Gene " + gene + " found in " + theNamesInternalPath);
 					ts.add(gene);
 				}
 				else
 				{
-					TcgaGSData.printWithFlag("Gene " + gene + " not found in " + thePlatform);
+					TcgaGSData.printWithFlag("Gene " + gene + " not found in " + theNamesInternalPath);
 				}
 			}
 			mGenes = ts.toArray(new String[0]);
@@ -105,7 +70,7 @@ public class GetDataMatrix
 		{
 			String requestedGene = mGenes[counter];
 			GetDataGeneEq rg = new GetDataGeneEq(mPath);
-			if (true==rg.getData(requestedGene, thePlatform))
+			if (true==rg.getData(requestedGene, theInternalPath))
 			{
 				if (null==mGenesBySamplesValues)
 				{
@@ -120,11 +85,11 @@ public class GetDataMatrix
 		long finish = System.currentTimeMillis();
 		if(true==found)
 		{
-			TcgaGSData.printWithFlag(mGenesSize + " genes retrieved for " + thePlatform + " in " + ((finish-start)/1000.0) + " seconds");
+			TcgaGSData.printWithFlag(mGenesSize + " genes retrieved for " + theInternalPath + " in " + ((finish-start)/1000.0) + " seconds");
 		}
 		else
 		{
-			TcgaGSData.printWithFlag("No genes retrieved for " + thePlatform + " in " + ((finish-start)/1000.0) + " seconds");
+			TcgaGSData.printWithFlag("No genes retrieved for " + theInternalPath + " in " + ((finish-start)/1000.0) + " seconds");
 		}
 		return found;
 	}

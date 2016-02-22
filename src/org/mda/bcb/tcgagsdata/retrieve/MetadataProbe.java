@@ -10,23 +10,19 @@ You should have received a copy of the GNU General Public License along with thi
 
 package org.mda.bcb.tcgagsdata.retrieve;
 
-import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.TreeMap;
+import org.mda.bcb.tcgagsdata.ReadZipFile;
 import org.mda.bcb.tcgagsdata.TcgaGSData;
 
 /**
  *
  * @author tdcasasent
  */
-public class MetadataProbe
+public class MetadataProbe extends ReadZipFile
 {
 	public int mGeneStructureLength = 0;
 	public String mName = null;
@@ -46,22 +42,23 @@ public class MetadataProbe
 	protected static TreeMap<String, MetadataProbe> M_METH27_PROBE_TO_METADATA = null;
 	protected static HashMap<String, MetadataProbe> M_METH450_PROBE_TO_METADATA = null;
 
-	public MetadataProbe(String thePath)
+	public MetadataProbe(String theZipFile)
 	{
-		if (false==thePath.equals(M_PATH))
+		super(theZipFile);
+		if (false==theZipFile.equals(M_PATH))
 		{
-			M_PATH = thePath;
+			M_PATH = theZipFile;
 			M_METH27_PROBE_TO_METADATA = null;
 			M_METH450_PROBE_TO_METADATA = null;
 		}
 	}
 
-	public boolean getMetadata_Meth27(String theProbe) throws IOException
+	public boolean getMetadata_Meth27(String theProbe, String theInternalPath) throws IOException
 	{
 		try
 		{
 			TcgaGSData.printVersion();
-			return getMetadataMeth27(theProbe, "meth27map.tsv");
+			return getMetadataMeth27(theProbe, theInternalPath);
 		}
 		catch(Exception exp)
 		{
@@ -72,12 +69,12 @@ public class MetadataProbe
 		}
 	}
 
-	public boolean getMetadata_Meth450(String theProbe) throws IOException
+	public boolean getMetadata_Meth450(String theProbe, String theInternalPath) throws IOException
 	{
 		try
 		{
 			TcgaGSData.printVersion();
-			return getMetadata450(theProbe, "meth450map.tsv");
+			return getMetadata450(theProbe, theInternalPath);
 		}
 		catch(Exception exp)
 		{
@@ -227,7 +224,7 @@ public class MetadataProbe
 		return mdp;
 	}
 
-	protected boolean getMetadata450(String theProbe, String theFile) throws IOException
+	protected boolean getMetadata450(String theProbe, String theInternalPath) throws IOException
 	{
 		mName = null;
 		mGeneStructureLength = 0;
@@ -241,36 +238,9 @@ public class MetadataProbe
 		if (null==M_METH450_PROBE_TO_METADATA)
 		{
 			M_METH450_PROBE_TO_METADATA = new HashMap<>();
-			File input = new File(M_PATH, theFile);
-			if (input.exists())
-			{
-				try (BufferedReader br = Files.newBufferedReader(
-						Paths.get(input.getAbsolutePath()),
-						Charset.availableCharsets().get("ISO-8859-1")))
-				{
-					String line = br.readLine();
-					populateHeaderLines450(line);
-					line = br.readLine();
-					long count = 0;
-					while (null != line)
-					{
-						String[] splitted = line.split("\t", -1);
-						MetadataProbe mdp = populateGetMetadata450(splitted);
-						M_METH450_PROBE_TO_METADATA.put(mdp.mName, mdp);
-						line = br.readLine();
-						count = count + 1;
-						if (0 == (count % 10000))
-						{
-							System.out.print(count + ", ");
-						}
-						if (0 == (count % 100000))
-						{
-							System.out.println("");
-						}
-					}
-					System.out.println(count);
-				}
-			}
+			mM27flag = false;
+			mFirstLine = true;
+			processFile(theInternalPath);
 		}
 		MetadataProbe mdp = M_METH450_PROBE_TO_METADATA.get(theProbe);
 		if (null!=mdp)
@@ -281,16 +251,19 @@ public class MetadataProbe
 		long finish = System.currentTimeMillis();
 		if (true == found)
 		{
-			TcgaGSData.printWithFlag("Probe " + theProbe + " retrieved for " + theFile + " in " + ((finish - start) / 1000.0) + " seconds");
+			TcgaGSData.printWithFlag("Probe " + theProbe + " retrieved for " + theInternalPath + " in " + ((finish - start) / 1000.0) + " seconds");
 		}
 		else
 		{
-			TcgaGSData.printWithFlag("Probe " + theProbe + " not found for " + theFile + " in " + ((finish - start) / 1000.0) + " seconds");
+			TcgaGSData.printWithFlag("Probe " + theProbe + " not found for " + theInternalPath + " in " + ((finish - start) / 1000.0) + " seconds");
 		}
 		return found;
 	}
 
-	protected boolean getMetadataMeth27(String theProbe, String theFile) throws IOException
+	protected boolean mM27flag = false;
+	protected boolean mFirstLine = true;
+	
+	protected boolean getMetadataMeth27(String theProbe, String theInternalPath) throws IOException
 	{
 		mName = null;
 		mGeneStructureLength = 0;
@@ -303,37 +276,10 @@ public class MetadataProbe
 		long start = System.currentTimeMillis();
 		if (null==M_METH27_PROBE_TO_METADATA)
 		{
+			mM27flag = true;
+			mFirstLine = true;
 			M_METH27_PROBE_TO_METADATA = new TreeMap<>();
-			File input = new File(M_PATH, theFile);
-			if (input.exists())
-			{
-				try (BufferedReader br = Files.newBufferedReader(
-						Paths.get(input.getAbsolutePath()),
-						Charset.availableCharsets().get("ISO-8859-1")))
-				{
-					String line = br.readLine();
-					populateHeaderLines27(line);
-					line = br.readLine();
-					long count = 0;
-					while (null != line)
-					{
-						String[] splitted = line.split("\t", -1);
-						MetadataProbe mdp = populateGetMetadataMeth27(splitted);
-						M_METH27_PROBE_TO_METADATA.put(mdp.mName, mdp);
-						line = br.readLine();
-						count = count + 1;
-						if (0 == (count % 1000))
-						{
-							System.out.print(count + ", ");
-						}
-						if (0 == (count % 10000))
-						{
-							System.out.println("");
-						}
-					}
-					System.out.println(count);
-				}
-			}
+			processFile(theInternalPath);
 		}
 		MetadataProbe mdp = M_METH27_PROBE_TO_METADATA.get(theProbe);
 		if (null!=mdp)
@@ -344,12 +290,44 @@ public class MetadataProbe
 		long finish = System.currentTimeMillis();
 		if (true == found)
 		{
-			TcgaGSData.printWithFlag("Probe " + theProbe + " retrieved for " + theFile + " in " + ((finish - start) / 1000.0) + " seconds");
+			TcgaGSData.printWithFlag("Probe " + theProbe + " retrieved for " + theInternalPath + " in " + ((finish - start) / 1000.0) + " seconds");
 		}
 		else
 		{
-			TcgaGSData.printWithFlag("Probe " + theProbe + " not found for " + theFile + " in " + ((finish - start) / 1000.0) + " seconds");
+			TcgaGSData.printWithFlag("Probe " + theProbe + " not found for " + theInternalPath + " in " + ((finish - start) / 1000.0) + " seconds");
 		}
 		return found;
+	}
+
+	@Override
+	protected boolean processLine(String theLine)
+	{
+		if (true==mFirstLine)
+		{
+			if (mM27flag)
+			{
+				populateHeaderLines27(theLine);
+			}
+			else
+			{
+				populateHeaderLines450(theLine);
+			}
+			mFirstLine = false;
+		}
+		else
+		{
+			String[] splitted = theLine.split("\t", -1);
+			if (mM27flag)
+			{
+				MetadataProbe mdp = populateGetMetadataMeth27(splitted);
+				M_METH27_PROBE_TO_METADATA.put(mdp.mName, mdp);
+			}
+			else
+			{
+				MetadataProbe mdp = populateGetMetadata450(splitted);
+				M_METH450_PROBE_TO_METADATA.put(mdp.mName, mdp);
+			}
+		}
+		return true;
 	}
 }

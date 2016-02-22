@@ -10,13 +10,9 @@ You should have received a copy of the GNU General Public License along with thi
 
 package org.mda.bcb.tcgagsdata.neighbors;
 
-import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
+import org.mda.bcb.tcgagsdata.ReadZipFile;
 import org.mda.bcb.tcgagsdata.TcgaGSData;
 import org.mda.bcb.tcgagsdata.retrieve.MetadataProbe;
 
@@ -24,16 +20,18 @@ import org.mda.bcb.tcgagsdata.retrieve.MetadataProbe;
  *
  * @author tdcasasent
  */
-public abstract class FindMethNeighbors_Mixin
+public abstract class FindMethNeighbors_Mixin extends ReadZipFile
 {
 	protected String mMapFile = null;
 	protected String mPath = null;
 	protected MetadataProbe mReadProbe = null;
+	protected String mHeaderLine = null;
 
-	public FindMethNeighbors_Mixin(String theMapFile, String theDirectory)
+	public FindMethNeighbors_Mixin(String theMapFile, String theZipFile)
 	{
+		super(theZipFile);
 		mMapFile = theMapFile;
-		mPath = theDirectory;
+		mPath = theZipFile;
 	}
 
 	abstract protected MetadataProbe getReadProbe(String theHeaderLine, String[] theSplitted);
@@ -47,24 +45,8 @@ public abstract class FindMethNeighbors_Mixin
 		ArrayList<MetadataProbe> probeList = getProbes();
 		if (null==probeList)
 		{
-			File input = new File(mPath, mMapFile);
-			if (input.exists())
-			{
-				try(BufferedReader br = Files.newBufferedReader(
-						Paths.get(input.getAbsolutePath()),
-						Charset.availableCharsets().get("ISO-8859-1")))
-				{
-					String headers=br.readLine();
-					// get line after headers
-					String line=br.readLine();
-					while(null!=line)
-					{
-						String [] splitted = line.split("\t", -1);
-						addProbe(getReadProbe(headers, splitted));
-						line=br.readLine();
-					}
-				}
-			}
+			mHeaderLine = null;
+			processFile(mMapFile);
 			probeList = getProbes();
 		}
 		ArrayList<MetadataProbe> results = new ArrayList<>();
@@ -83,6 +65,21 @@ public abstract class FindMethNeighbors_Mixin
 		MetadataProbe [] retArray = results.toArray(new MetadataProbe[0]);
 		TcgaGSData.printWithFlag("made array");
 		return retArray;
+	}
+
+	@Override
+	protected boolean processLine(String theLine)
+	{
+		if (null==mHeaderLine)
+		{
+			mHeaderLine = theLine;
+		}
+		else
+		{
+			String [] splitted = theLine.split("\t", -1);
+			addProbe(getReadProbe(mHeaderLine, splitted));
+		}
+		return true;
 	}
 
 }

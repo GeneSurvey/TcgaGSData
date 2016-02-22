@@ -10,13 +10,13 @@ You should have received a copy of the GNU General Public License along with thi
 
 package org.mda.bcb.tcgagsdata.retrieve;
 
-import java.io.File;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import org.mda.bcb.tcgagsdata.CallFromR;
 
 /**
  *
@@ -24,8 +24,8 @@ import static org.junit.Assert.*;
  */
 public class OneToOneUcscHgncTest
 {
-	public String mDir = "/mnt/hgfs/code/development/TcgaGSData/";
-	public OneToOneUcscHgnc mTest = null;
+	public String mDir = "/mnt/hgfs/code/development/GENE_REPORT_2015_12_11.zip";
+	public CallFromR mTest = null;
 	
 	public OneToOneUcscHgncTest()
 	{
@@ -44,7 +44,7 @@ public class OneToOneUcscHgncTest
 	@Before
 	public void setUp()
 	{
-		mTest = new OneToOneUcscHgnc(new File(new File(mDir, "iddata"), "downloads").getAbsolutePath());
+		mTest = new CallFromR(mDir);
 	}
 	
 	@After
@@ -59,8 +59,7 @@ public class OneToOneUcscHgncTest
 	public void testGetOneToOne_UCSC_List() throws Exception
 	{
 		System.out.println("getOneToOne_UCSC_List");
-		OneToOneUcscHgnc instance = mTest;
-		String[] result = instance.getOneToOne_UCSC_List();
+		String[] result = mTest.getOneToOne_UCSC_List();
 		assertEquals(28829, result.length);
 		assertEquals("uc001aak.3", result[0]);
 		assertEquals("uc033fgu.1", result[result.length-1]);
@@ -73,9 +72,8 @@ public class OneToOneUcscHgncTest
 	public void testGetOneToOne_GeneSymbol_List() throws Exception
 	{
 		System.out.println("getOneToOne_GeneSymbol_List");
-		OneToOneUcscHgnc instance = mTest;
-		String[] result = instance.getOneToOne_GeneSymbol_List();
-		assertEquals(28829, result.length);
+		String[] result = mTest.getOneToOne_GeneSymbol_List();
+		assertTrue(result.length >= 28829);
 		assertEquals("6M1-18", result[0]);
 		assertEquals("ZZZ3", result[result.length-1]);
 	}
@@ -89,16 +87,14 @@ public class OneToOneUcscHgncTest
 		System.out.println("getOneToOne_GeneSymbol_UCID");
 		{
 			String theId = "uc001aak.3";
-			OneToOneUcscHgnc instance = mTest;
 			String expResult = "FAM138A";
-			String result = instance.getOneToOne_GeneSymbol_UCID(theId);
+			String result = mTest.getOneToOne_GeneSymbol_UCID(theId);
 			assertEquals(expResult, result);
 		}
 		{
 			String theId = "uc001amp.2";
-			OneToOneUcscHgnc instance = mTest;
 			String expResult = "GPR153";
-			String result = instance.getOneToOne_GeneSymbol_UCID(theId);
+			String result = mTest.getOneToOne_GeneSymbol_UCID(theId);
 			assertEquals(expResult, result);
 		}
 	}
@@ -111,17 +107,21 @@ public class OneToOneUcscHgncTest
 	{
 		System.out.println("getOneToOne_UCID_GeneSymbol");
 		{
-			String theId = "ABCB8";
-			OneToOneUcscHgnc instance = mTest;
-			String expResult = "uc003wil.5";
-			String result = instance.getOneToOne_UCID_GeneSymbol(theId);
+			String theId = "JA202330";
+			String expResult = "uc031til.1";
+			String result = mTest.getOneToOne_UCID_GeneSymbol(theId);
 			assertEquals(expResult, result);
 		}
+//		{
+//			String theId = "ABCB8";
+//			String expResult = "uc003wil.5";
+//			String result = mTest.getOneToOne_UCID_GeneSymbol(theId);
+//			assertEquals(expResult, result);
+//		}
 		{
 			String theId = "ABCC5";
-			OneToOneUcscHgnc instance = mTest;
 			String expResult = "uc003fmg.3";
-			String result = instance.getOneToOne_UCID_GeneSymbol(theId);
+			String result = mTest.getOneToOne_UCID_GeneSymbol(theId);
 			assertEquals(expResult, result);
 		}
 	}

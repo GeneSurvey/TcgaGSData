@@ -10,22 +10,18 @@ You should have received a copy of the GNU General Public License along with thi
 
 package org.mda.bcb.tcgagsdata.retrieve;
 
-import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import org.mda.bcb.tcgagsdata.ReadZipFile;
 import org.mda.bcb.tcgagsdata.TcgaGSData;
 
 /**
  *
  * @author linux
  */
-public class MetadataGene
+public class MetadataGene extends ReadZipFile
 {
 	//
 	public String mGeneSymbol = null;
@@ -49,12 +45,18 @@ public class MetadataGene
 	protected static HashMap<String, ArrayList<MetadataGene>> M_RNASEQ_SYMBOL_TO_METADATA = null;
 	protected static HashMap<String, ArrayList<MetadataGene>> M_HG18_SYMBOL_TO_METADATA = null;
 	protected static HashMap<String, ArrayList<MetadataGene>> M_HG19_SYMBOL_TO_METADATA = null;
+	//
+	protected boolean mFirstLine = true;
+	protected boolean mRNASEQflag = false;
+	protected boolean mHG18flag = false;
+	protected boolean mHG19flag = false;
 
-	public MetadataGene(String thePath)
+	public MetadataGene(String theZipFile)
 	{
-		if (false==thePath.equals(M_PATH))
+		super(theZipFile);
+		if (false==theZipFile.equals(M_PATH))
 		{
-			M_PATH = thePath;
+			M_PATH = theZipFile;
 			M_RNASEQ_ID_TO_METADATA = null;
 			M_RNASEQ_SYMBOL_TO_METADATA = null;
 			M_HG18_SYMBOL_TO_METADATA = null;
@@ -69,12 +71,12 @@ public class MetadataGene
 		mStrand = null;
 	}
 
-	public MetadataGene [] getMetadataList_Mutations(String theStandardizedDataId) throws IOException
+	public MetadataGene [] getMetadataList_Mutations(String theStandardizedDataId, String theInternalPath) throws IOException
 	{
 		try
 		{
 			TcgaGSData.printVersion();
-			return getMetadataListHg19(theStandardizedDataId, "HG19map.tsv");
+			return getMetadataListHg19(theStandardizedDataId, theInternalPath);
 		}
 		catch(Exception exp)
 		{
@@ -87,12 +89,12 @@ public class MetadataGene
 		}
 	}
 
-	public MetadataGene [] getMetadataList_RNASeq(String theStandardizedDataId) throws IOException
+	public MetadataGene [] getMetadataList_RNASeq(String theStandardizedDataId, String theInternalPath) throws IOException
 	{
 		try
 		{
 			TcgaGSData.printVersion();
-			return getMetadataListRnaSeq(theStandardizedDataId, "rnaseqMap.tsv");
+			return getMetadataListRnaSeq(theStandardizedDataId, theInternalPath);
 		}
 		catch(Exception exp)
 		{
@@ -105,12 +107,12 @@ public class MetadataGene
 		}
 	}
 
-	public MetadataGene [] getMetadataList_RNASeqV2(String theStandardizedDataId) throws IOException
+	public MetadataGene [] getMetadataList_RNASeqV2(String theStandardizedDataId, String theInternalPath) throws IOException
 	{
 		try
 		{
 			TcgaGSData.printVersion();
-			return getMetadataListRnaSeq(theStandardizedDataId, "rnaseqMap.tsv");
+			return getMetadataListRnaSeq(theStandardizedDataId, theInternalPath);
 		}
 		catch(Exception exp)
 		{
@@ -123,12 +125,12 @@ public class MetadataGene
 		}
 	}
 
-	public MetadataGene [] getMetadataList_HG18(String theStandardizedDataId) throws IOException
+	public MetadataGene [] getMetadataList_HG18(String theStandardizedDataId, String theInternalPath) throws IOException
 	{
 		try
 		{
 			TcgaGSData.printVersion();
-			return getMetadataListHg18(theStandardizedDataId, "HG18map.tsv");
+			return getMetadataListHg18(theStandardizedDataId, theInternalPath);
 		}
 		catch(Exception exp)
 		{
@@ -141,12 +143,12 @@ public class MetadataGene
 		}
 	}
 
-	public MetadataGene [] getMetadataList_HG19(String theStandardizedDataId) throws IOException
+	public MetadataGene [] getMetadataList_HG19(String theStandardizedDataId, String theInternalPath) throws IOException
 	{
 		try
 		{
 			TcgaGSData.printVersion();
-			return getMetadataListHg19(theStandardizedDataId, "HG19map.tsv");
+			return getMetadataListHg19(theStandardizedDataId, theInternalPath);
 		}
 		catch(Exception exp)
 		{
@@ -212,25 +214,11 @@ public class MetadataGene
 		{
 			M_RNASEQ_ID_TO_METADATA = new HashMap<>();
 			M_RNASEQ_SYMBOL_TO_METADATA = new HashMap<>();
-			File input = new File(M_PATH, theFile);
-			if (input.exists())
-			{
-				try (BufferedReader br = Files.newBufferedReader(
-						Paths.get(input.getAbsolutePath()),
-						Charset.availableCharsets().get("ISO-8859-1")))
-				{
-					String line = br.readLine();
-					populateHeaderLinesRnaSeq(line);
-					line = br.readLine();
-					while (null != line)
-					{
-						String[] splitted = line.split("\t", -1);
-						MetadataGene mg = makeMetadataHg(splitted);
-						addToLists(mg, M_RNASEQ_ID_TO_METADATA, M_RNASEQ_SYMBOL_TO_METADATA);
-						line = br.readLine();
-					}
-				}
-			}
+			mFirstLine = true;
+			mRNASEQflag = true;
+			mHG18flag = false;
+			mHG19flag = false;
+			processFile(theFile);
 		}
 	}
 
@@ -287,7 +275,7 @@ public class MetadataGene
 		if (null==M_HG18_SYMBOL_TO_METADATA)
 		{
 			M_HG18_SYMBOL_TO_METADATA = new HashMap<>();
-			loadHGdata(theFile, M_HG18_SYMBOL_TO_METADATA);
+			loadHGdata(theFile, false);
 		}
 		list = M_HG18_SYMBOL_TO_METADATA.get(theGeneSymbol);
 		if (null!=list)
@@ -322,7 +310,7 @@ public class MetadataGene
 		if (null==M_HG19_SYMBOL_TO_METADATA)
 		{
 			M_HG19_SYMBOL_TO_METADATA = new HashMap<>();
-			loadHGdata(theFile, M_HG19_SYMBOL_TO_METADATA);
+			loadHGdata(theFile, true);
 		}
 		list = M_HG19_SYMBOL_TO_METADATA.get(theGeneSymbol);
 		if (null!=list)
@@ -349,32 +337,13 @@ public class MetadataGene
 	//// HG shared
 	////////////////////////////////////////////////////////////////////////////
 	
-	protected void loadHGdata(String theFile, HashMap<String, ArrayList<MetadataGene>> theGeneSymbolToMetadata) throws IOException
+	protected void loadHGdata(String theFile, boolean the19flag) throws IOException
 	{
-		File input = new File(M_PATH, theFile);
-		if (input.exists())
-		{
-			try (BufferedReader br = Files.newBufferedReader(
-					Paths.get(input.getAbsolutePath()),
-					Charset.availableCharsets().get("ISO-8859-1")))
-			{
-				String line = br.readLine();
-				populateHeaderLinesHg(line);
-				line = br.readLine();
-				while (null != line)
-				{
-					String[] splitted = line.split("\t", -1);
-					MetadataGene mg = makeMetadataHg(splitted);
-					addToLists(mg, null, theGeneSymbolToMetadata);
-					line = br.readLine();
-				}
-			}
-			catch(IOException exp)
-			{
-				exp.printStackTrace(System.out);
-				throw exp;
-			}
-		}
+		mFirstLine = true;
+		mRNASEQflag = false;
+		mHG18flag = !the19flag;
+		mHG19flag = the19flag;
+		processFile(theFile);
 	}
 
 	protected void populateHeaderLinesHg(String theLine)
@@ -420,5 +389,42 @@ public class MetadataGene
 	
 	////////////////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////////////
+
+	
+	
+	@Override
+	protected boolean processLine(String theLine)
+	{
+		if (true==mFirstLine)
+		{
+			if (mHG18flag||mHG19flag)
+			{
+				populateHeaderLinesHg(theLine);
+			}
+			else
+			{
+				populateHeaderLinesRnaSeq(theLine);
+			}
+			mFirstLine = false;
+		}
+		else
+		{
+			String[] splitted = theLine.split("\t", -1);
+			MetadataGene mg = makeMetadataHg(splitted);
+			if (mHG18flag)
+			{
+				addToLists(mg, null, M_HG18_SYMBOL_TO_METADATA);
+			}
+			else if (mHG19flag)
+			{
+				addToLists(mg, null, M_HG19_SYMBOL_TO_METADATA);
+			}
+			else
+			{
+				addToLists(mg, M_RNASEQ_ID_TO_METADATA, M_RNASEQ_SYMBOL_TO_METADATA);
+			}
+		}
+		return true;
+	}
 
 }

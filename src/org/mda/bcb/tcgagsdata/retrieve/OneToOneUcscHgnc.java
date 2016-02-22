@@ -10,43 +10,42 @@ You should have received a copy of the GNU General Public License along with thi
 
 package org.mda.bcb.tcgagsdata.retrieve;
 
-import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.util.TreeMap;
+import org.mda.bcb.tcgagsdata.ReadZipFile;
 import org.mda.bcb.tcgagsdata.TcgaGSData;
 
 /**
  *
  * @author tdcasasent
  */
-public class OneToOneUcscHgnc
+public class OneToOneUcscHgnc extends ReadZipFile
 {
 
 	static protected String M_PATH = null;
 	static protected TreeMap<String, String> M_UCID_TO_GENESYMBOL = null;
 	static protected TreeMap<String, String> M_GENESYMBOL_TO_UCID = null;
 
-	public OneToOneUcscHgnc(String thePath)
+	public OneToOneUcscHgnc(String theZipFile)
 	{
-		if (false==thePath.equals(M_PATH))
+		super(theZipFile);
+		if (false==theZipFile.equals(M_PATH))
 		{
-			M_PATH = thePath;
+			M_PATH = theZipFile;
 			M_UCID_TO_GENESYMBOL = null;
 			M_GENESYMBOL_TO_UCID = null;
 		}
 	}
 
-	public String [] getOneToOne_UCSC_List() throws IOException
+	public String [] getOneToOne_UCSC_List(String theInternalPath) throws IOException
 	{
 		try
 		{
 			TcgaGSData.printVersion();
 			if (null==M_UCID_TO_GENESYMBOL)
 			{
-				loadOneToOne(new File(M_PATH, "oneToOneUcscHgnc.tsv").getAbsolutePath());
+				loadOneToOne(theInternalPath);
 			}
 			return M_UCID_TO_GENESYMBOL.keySet().toArray(new String[0]);
 		}
@@ -59,14 +58,14 @@ public class OneToOneUcscHgnc
 		}
 	}
 
-	public String [] getOneToOne_GeneSymbol_List() throws IOException
+	public String [] getOneToOne_GeneSymbol_List(String theInternalPath) throws IOException
 	{
 		try
 		{
 			TcgaGSData.printVersion();
 			if (null==M_GENESYMBOL_TO_UCID)
 			{
-				loadOneToOne(new File(M_PATH, "oneToOneUcscHgnc.tsv").getAbsolutePath());
+				loadOneToOne(theInternalPath);
 			}
 			return M_GENESYMBOL_TO_UCID.keySet().toArray(new String[0]);
 		}
@@ -79,14 +78,14 @@ public class OneToOneUcscHgnc
 		}
 	}
 
-	public String getOneToOne_GeneSymbol_UCID(String theId) throws IOException
+	public String getOneToOne_GeneSymbol_UCID(String theId, String theInternalPath) throws IOException
 	{
 		try
 		{
 			TcgaGSData.printVersion();
 			if (null==M_UCID_TO_GENESYMBOL)
 			{
-				loadOneToOne(new File(M_PATH, "oneToOneUcscHgnc.tsv").getAbsolutePath());
+				loadOneToOne(theInternalPath);
 			}
 			return M_UCID_TO_GENESYMBOL.get(theId);
 		}
@@ -99,14 +98,14 @@ public class OneToOneUcscHgnc
 		}
 	}
 	
-	public String getOneToOne_UCID_GeneSymbol(String theId) throws IOException
+	public String getOneToOne_UCID_GeneSymbol(String theId, String theInternalPath) throws IOException
 	{
 		try
 		{
 			TcgaGSData.printVersion();
 			if (null==M_GENESYMBOL_TO_UCID)
 			{
-				loadOneToOne(new File(M_PATH, "oneToOneUcscHgnc.tsv").getAbsolutePath());
+				loadOneToOne(theInternalPath);
 			}
 			return M_GENESYMBOL_TO_UCID.get(theId);
 		}
@@ -119,22 +118,21 @@ public class OneToOneUcscHgnc
 		}
 	}
 	
-	protected void loadOneToOne(String thePreppedFile) throws FileNotFoundException, IOException
+	protected void loadOneToOne(String theInternalPath) throws FileNotFoundException, IOException
 	{
 		M_UCID_TO_GENESYMBOL = new TreeMap<>();
 		M_GENESYMBOL_TO_UCID = new TreeMap<>();
-		try(BufferedReader br = new BufferedReader(new FileReader(thePreppedFile)))
-		{
-			String inLine = br.readLine();
-			while(null!=inLine)
-			{
-				String [] tabSplit = inLine.split("\t", -1);
-				String ucid = tabSplit[0];
-				String symbol = tabSplit[1];
-				M_UCID_TO_GENESYMBOL.put(ucid, symbol);
-				M_GENESYMBOL_TO_UCID.put(symbol, ucid);
-				inLine = br.readLine();
-			}
-		}
+		processFile(theInternalPath);
+	}
+
+	@Override
+	protected boolean processLine(String theLine)
+	{
+		String [] tabSplit = theLine.split("\t", -1);
+		String ucid = tabSplit[0];
+		String symbol = tabSplit[1];
+		M_UCID_TO_GENESYMBOL.put(ucid, symbol);
+		M_GENESYMBOL_TO_UCID.put(symbol, ucid);
+		return true;
 	}
 }

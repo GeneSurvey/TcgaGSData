@@ -34,37 +34,7 @@ public class GetImputedNAsMatrix
 		mPath = thePath;
 	}
 
-	public boolean getImputedNAsMatrix_RnaSeq2(String [] theGenes) throws IOException
-	{
-		return getImputedNAsMatrix(theGenes, "illuminahiseq_rnaseqv2_gene");
-	}
-
-	public boolean getImputedNAsMatrix_RnaSeq(String [] theGenes) throws IOException
-	{
-		return getImputedNAsMatrix(theGenes, "illuminahiseq_rnaseq_uncGeneRPKM");
-	}
-
-	public boolean getImputedNAsMatrix_SNP6(String [] theGenes) throws IOException
-	{
-		return getImputedNAsMatrix(theGenes, "genome_wide_snp_6_hg19nocnvWxy");
-	}
-
-	public boolean getImputedNAsMatrix_Meth450(String [] theGenes) throws IOException
-	{
-		return getImputedNAsMatrix(theGenes, "humanmethylation450_level3");
-	}
-
-	public boolean getImputedNAsMatrix_Meth27(String [] theGenes) throws IOException
-	{
-		return getImputedNAsMatrix(theGenes, "humanmethylation27_hg19Wxy");
-	}
-
-	public boolean getImputedNAsMatrix_miRNASeq(String [] theGenes) throws IOException
-	{
-		return getImputedNAsMatrix(theGenes, "illuminahiseq_mirnaseq_isoform");
-	}
-
-	public boolean getImputedNAsMatrix(String [] theGenes, String thePlatform) throws IOException
+	public boolean getImputedNAsMatrix(String [] theGenes, String theInternalPath, String theNamesInternalPath) throws IOException
 	{
 		mSampleSize = 0;
 		mGenesSize = 0;
@@ -76,7 +46,7 @@ public class GetImputedNAsMatrix
 		// get list of genes
 		{
 			GetNamesGeneEq lg = new GetNamesGeneEq(mPath);
-			lg.getNamesGenes(thePlatform);
+			lg.getNamesGenes(theNamesInternalPath);
 			TreeSet<String> allGenes = new TreeSet<>();
 			allGenes.addAll(Arrays.asList(lg.mGenes));
 			TreeSet<String> ts = new TreeSet<>();
@@ -84,12 +54,12 @@ public class GetImputedNAsMatrix
 			{
 				if (allGenes.contains(gene))
 				{
-					TcgaGSData.printWithFlag("Gene " + gene + " found in " + thePlatform);
+					TcgaGSData.printWithFlag("Gene " + gene + " found in " + theNamesInternalPath);
 					ts.add(gene);
 				}
 				else
 				{
-					TcgaGSData.printWithFlag("Gene " + gene + " not found in " + thePlatform);
+					TcgaGSData.printWithFlag("Gene " + gene + " not found in " + theNamesInternalPath);
 				}
 			}
 			mGenes = ts.toArray(new String[0]);
@@ -100,7 +70,7 @@ public class GetImputedNAsMatrix
 		{
 			String requestedGene = mGenes[counter];
 			GetImputedNAsGeneEq rg = new GetImputedNAsGeneEq(mPath);
-			if (true==rg.getData(requestedGene, thePlatform))
+			if (true==rg.getData(requestedGene, theInternalPath))
 			{
 				if (null==mGenesBySamplesValues)
 				{
@@ -115,11 +85,11 @@ public class GetImputedNAsMatrix
 		long finish = System.currentTimeMillis();
 		if(true==found)
 		{
-			TcgaGSData.printWithFlag(mGenesSize + " genes retrieved for " + thePlatform + " in " + ((finish-start)/1000.0) + " seconds");
+			TcgaGSData.printWithFlag(mGenesSize + " genes retrieved for " + theInternalPath + " in " + ((finish-start)/1000.0) + " seconds");
 		}
 		else
 		{
-			TcgaGSData.printWithFlag("No genes retrieved for " + thePlatform + " in " + ((finish-start)/1000.0) + " seconds");
+			TcgaGSData.printWithFlag("No genes retrieved for " + theInternalPath + " in " + ((finish-start)/1000.0) + " seconds");
 		}
 		return found;
 	}

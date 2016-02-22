@@ -22,12 +22,12 @@ public class FN_Meth450 extends FindMethNeighbors_Mixin
 	static protected String M_PATH = null;
 	static protected ArrayList<MetadataProbe> M_PROBES = null;
 
-	public FN_Meth450(String theDirectory)
+	public FN_Meth450(String theZipFile)
 	{
-		super("meth450map.tsv", theDirectory);
-		if (false==theDirectory.equals(M_PATH))
+		super("data/meth450map.tsv", theZipFile);
+		if (false==theZipFile.equals(M_PATH))
 		{
-			M_PATH = theDirectory;
+			M_PATH = theZipFile;
 			M_PROBES = null;
 		}
 	}

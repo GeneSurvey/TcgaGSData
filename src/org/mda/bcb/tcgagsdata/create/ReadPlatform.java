@@ -24,7 +24,6 @@ import org.apache.commons.io.filefilter.TrueFileFilter;
 import org.apache.commons.io.filefilter.WildcardFileFilter;
 import org.mda.bcb.tcgagsdata.GSStringUtils;
 import org.mda.bcb.tcgagsdata.TcgaGSData;
-import org.mda.bcb.tcgagsdata.retrieve.GetNamesGeneEq;
 
 /**
  *
@@ -54,7 +53,7 @@ public class ReadPlatform
 		mNumberOfGenes = 0;
 		TreeMap<String, Integer> geneMap = null;
 		{
-			GetNamesGeneEq lg = new GetNamesGeneEq(mReadPath);
+			ReadPlatform_GeneEq lg = new ReadPlatform_GeneEq(mReadPath);
 			lg.getNamesGenes(thePlatform);
 			mGenes = lg.mGenes;
 			geneMap = TcgaGSData.buildIndexMap(lg.mGenes);

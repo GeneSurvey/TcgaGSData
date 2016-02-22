@@ -10,14 +10,10 @@ You should have received a copy of the GNU General Public License along with thi
 
 package org.mda.bcb.tcgagsdata.neighbors;
 
-import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import org.mda.bcb.tcgagsdata.ReadZipFile;
 import org.mda.bcb.tcgagsdata.TcgaGSData;
 import org.mda.bcb.tcgagsdata.retrieve.MetadataGene;
 
@@ -25,7 +21,7 @@ import org.mda.bcb.tcgagsdata.retrieve.MetadataGene;
  *
  * @author linux
  */
-public class FindRNASeqNeighbors_Mixin
+public class FindRNASeqNeighbors_Mixin extends ReadZipFile
 {
 	static protected String M_MAP_FILE = null;
 	static protected String M_PATH = null;
@@ -38,13 +34,21 @@ public class FindRNASeqNeighbors_Mixin
 	public int mIndexLocationStart = -1;
 	public int mIndexLocationEnd = -1;
 	public int mIndexStrand = -1;
-	
-	public FindRNASeqNeighbors_Mixin(String theMapFile, String theDirectory)
+	//
+	protected boolean mFirstLine = true;
+	protected ArrayList<MetadataGene> mList = null;
+	protected long mMin = -1;
+	protected long mMax = -1;
+	protected String mChromosome = null;
+	protected String mStrand = null;
+
+	public FindRNASeqNeighbors_Mixin(String theMapFile, String theZipFile)
 	{
-		if ((false==theMapFile.equals(M_MAP_FILE))||(false==theDirectory.equals(M_PATH)))
+		super(theZipFile);
+		if ((false==theMapFile.equals(M_MAP_FILE))||(false==theZipFile.equals(M_PATH)))
 		{
 			M_MAP_FILE = theMapFile;
-			M_PATH = theDirectory;
+			M_PATH = theZipFile;
 		}
 	}
 	
@@ -96,32 +100,38 @@ public class FindRNASeqNeighbors_Mixin
 	
 	public MetadataGene [] findNeighbors(long theMin, long theMax, String theChromosome, String theStrand) throws IOException
 	{
-		ArrayList<MetadataGene> list = new ArrayList<>();
 		long start = System.currentTimeMillis();
-		File input = new File(M_PATH, M_MAP_FILE);
-		if (input.exists())
+		mFirstLine = true;
+		mList = new ArrayList<>();
+		mMin = theMin;
+		mMax = theMax;
+		mChromosome = theChromosome;
+		mStrand = theStrand;
+		processFile(M_MAP_FILE);
+		long finish = System.currentTimeMillis();
+		TcgaGSData.printWithFlag("FindRNASeqNeighbors_Mixin findNeighbors retrieved " + mList.size() + " elements for in " + ((finish - start) / 1000.0) + " seconds");
+		ArrayList<MetadataGene> list = mList;
+		mList = null;
+		return list.toArray(new MetadataGene[0]);
+	}
+
+	@Override
+	protected boolean processLine(String theLine)
+	{
+		if (true==mFirstLine)
 		{
-			try (BufferedReader br = Files.newBufferedReader(
-					Paths.get(input.getAbsolutePath()),
-					Charset.availableCharsets().get("ISO-8859-1")))
+			mFirstLine = false;
+			populateHeaderLinesGeneric(theLine);
+		}
+		else
+		{
+			String[] splitted = theLine.split("\t", -1);
+			MetadataGene mdg = matchesParameters(splitted, mMin, mMax, mChromosome, mStrand);
+			if (null!=mdg)
 			{
-				String line = br.readLine();
-				populateHeaderLinesGeneric(line);
-				line = br.readLine();
-				while (null != line)
-				{
-					String[] splitted = line.split("\t", -1);
-					MetadataGene mdg = matchesParameters(splitted, theMin, theMax, theChromosome, theStrand);
-					if (null!=mdg)
-					{
-						list.add(mdg);
-					}
-					line = br.readLine();
-				}
+				mList.add(mdg);
 			}
 		}
-		long finish = System.currentTimeMillis();
-		TcgaGSData.printWithFlag("FindRNASeqNeighbors_Mixin findNeighbors retrieved " + list.size() + " elements for in " + ((finish - start) / 1000.0) + " seconds");
-		return list.toArray(new MetadataGene[0]);
+		return true;
 	}
 }

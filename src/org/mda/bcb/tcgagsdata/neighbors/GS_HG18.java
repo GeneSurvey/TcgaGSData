@@ -16,8 +16,8 @@ package org.mda.bcb.tcgagsdata.neighbors;
  */
 public class GS_HG18 extends FindGeneScoreNeighbors_Mixin
 {
-	public GS_HG18(String theDirectory)
+	public GS_HG18(String theZipFile)
 	{
-		super("HG18map.tsv", theDirectory);
+		super("data/HG18map.tsv", theZipFile);
 	}
 }

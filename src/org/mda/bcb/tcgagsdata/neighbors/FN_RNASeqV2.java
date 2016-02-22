@@ -16,8 +16,8 @@ package org.mda.bcb.tcgagsdata.neighbors;
  */
 public class FN_RNASeqV2 extends FindRNASeqNeighbors_Mixin
 {
-	public FN_RNASeqV2(String theDirectory)
+	public FN_RNASeqV2(String theZipFile)
 	{
-		super("rnaseqMap.tsv", theDirectory);
+		super("data/rnaseqMap.tsv", theZipFile);
 	}
 }

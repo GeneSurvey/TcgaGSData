@@ -10,20 +10,16 @@ You should have received a copy of the GNU General Public License along with thi
 
 package org.mda.bcb.tcgagsdata.retrieve;
 
-import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
+import org.mda.bcb.tcgagsdata.ReadZipFile;
 import org.mda.bcb.tcgagsdata.TcgaGSData;
 
 /**
  *
  * @author tdcasasent
  */
-public class MetadataPop
+public class MetadataPop extends ReadZipFile
 {
 	public String mPath = null;
 	public int mLength = 0;
@@ -44,19 +40,25 @@ public class MetadataPop
 	static protected int M_LENGTH_PATIENTDISEASE = 0;
 	static protected String [] M_VALUES_PATIENTDISEASE = null;
 	static protected String [] M_IDS_PATIENTDISEASE = null;
+	//
+	protected ArrayList<String> mIdsList = null;
+	protected ArrayList<String> mDataList = null;
 
-	public MetadataPop(String thePath)
+
+	public MetadataPop(String theZipFile)
 	{
+		super(theZipFile);
 		TcgaGSData.printVersion();
-		mPath = thePath;
+		mPath = theZipFile;
 	}
 
-	public boolean getMetadataPop_BarcodeDisease() throws IOException
+	// "data/barcode_disease.tsv"
+	public boolean getMetadataPop_BarcodeDisease(String theInternalPath) throws IOException
 	{
 		boolean loaded = false;
 		if ((null==M_PATH_BARCODEDISEASE)||(false==mPath.equals(M_PATH_BARCODEDISEASE)))
 		{
-			loaded = getMetadataPop("barcode_disease.tsv");
+			loaded = getMetadataPop(theInternalPath);
 			if (true==loaded)
 			{
 				M_PATH_BARCODEDISEASE = mPath;
@@ -75,12 +77,13 @@ public class MetadataPop
 		return loaded;
 	}
 
-	public boolean getMetadataPop_BarcodeSamplecode() throws IOException
+	// "data/barcode_samplecode.tsv"
+	public boolean getMetadataPop_BarcodeSamplecode(String theInternalPath) throws IOException
 	{
 		boolean loaded = false;
 		if ((null==M_PATH_BARCODESAMPLECODE)||(false==mPath.equals(M_PATH_BARCODESAMPLECODE)))
 		{
-			loaded = getMetadataPop("barcode_samplecode.tsv");
+			loaded = getMetadataPop(theInternalPath);
 			if (true==loaded)
 			{
 				M_PATH_BARCODESAMPLECODE = mPath;
@@ -99,12 +102,13 @@ public class MetadataPop
 		return loaded;
 	}
 
-	public boolean getMetadataPop_PatientDisease() throws IOException
+	// "data/patient_disease.tsv"
+	public boolean getMetadataPop_PatientDisease(String theInternalPath) throws IOException
 	{
 		boolean loaded = false;
 		if ((null==M_PATH_PATIENTDISEASE)||(false==mPath.equals(M_PATH_PATIENTDISEASE)))
 		{
-			loaded = getMetadataPop("patient_disease.tsv");
+			loaded = getMetadataPop(theInternalPath);
 			if (true==loaded)
 			{
 				M_PATH_PATIENTDISEASE = mPath;
@@ -123,7 +127,7 @@ public class MetadataPop
 		return loaded;
 	}
 
-	public boolean getMetadataPop(String theFile) throws IOException
+	public boolean getMetadataPop(String theInternalPath) throws IOException
 	{
 		boolean found = false;
 		try
@@ -131,37 +135,41 @@ public class MetadataPop
 			mLength = 0;
 			mValues = null;
 			mIds = null;
+			mIdsList = null;
+			mDataList = null;
 			long start = System.currentTimeMillis();
-			File input = new File(mPath, theFile);
-			if (input.exists())
-			{
-				try(BufferedReader br = Files.newBufferedReader(
-						Paths.get(input.getAbsolutePath()),
-						Charset.availableCharsets().get("ISO-8859-1")))
-				{
-					// first line header (ID\tDATA)
-					br.readLine();
-					ArrayList<String> ids = new ArrayList<>();
-					ArrayList<String> data = new ArrayList<>();
-					for(String line=br.readLine();null!=line;line=br.readLine())
-					{
-						String [] splitted = line.split("\t", -1);
-						ids.add(splitted[0]);
-						data.add(splitted[1]);
-					}
-					found = true;
-					mLength = ids.size();
-					mValues = data.toArray(new String[0]);
-					mIds = ids.toArray(new String[0]);
-				}
-			}
+			processFile(theInternalPath);
+			mLength = mIdsList.size();
+			mValues = mDataList.toArray(new String[0]);
+			mIds = mIdsList.toArray(new String[0]);
+			mIdsList = null;
+			mDataList = null;
+			found = true;
 			long finish = System.currentTimeMillis();
-			TcgaGSData.printWithFlag("ListMetadata " + theFile + " in " + ((finish-start)/1000.0) + " seconds");
+			TcgaGSData.printWithFlag("ListMetadata " + theInternalPath + " in " + ((finish-start)/1000.0) + " seconds");
 		}
 		catch(Exception exp)
 		{
 			exp.printStackTrace(System.err);
 		}
 		return found;
+	}
+	
+	@Override
+	protected boolean processLine(String theLine)
+	{
+		if (null==mIdsList)
+		{
+			// first line header (ID\tDATA)
+			mIdsList = new ArrayList<>();
+			mDataList = new ArrayList<>();
+		}
+		else
+		{
+			String [] splitted = theLine.split("\t", -1);
+			mIdsList.add(splitted[0]);
+			mDataList.add(splitted[1]);
+		}
+		return true;
 	}
 }

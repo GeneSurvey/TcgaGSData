@@ -17,6 +17,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import org.mda.bcb.tcgagsdata.CallFromR;
 
 /**
  *
@@ -24,8 +25,8 @@ import static org.junit.Assert.*;
  */
 public class MetadataTcgaNamesTest
 {
-	public String mDir = "/mnt/hgfs/code/development/TcgaGSData/";
-	public MetadataTcgaNames mTest = null;
+	public String mDir = "/mnt/hgfs/code/development/GENE_REPORT_2015_12_11.zip";
+	public CallFromR mTest = null;
 	
 	public MetadataTcgaNamesTest()
 	{
@@ -44,7 +45,7 @@ public class MetadataTcgaNamesTest
 	@Before
 	public void setUp()
 	{
-		mTest = new MetadataTcgaNames(new File(mDir, "data").getAbsolutePath());
+		mTest = new CallFromR(mDir);
 	}
 	
 	@After
@@ -61,16 +62,14 @@ public class MetadataTcgaNamesTest
 		System.out.println("getMetadataTcga_DatasetName");
 		{
 			String theId = "h-mirna_8x15kv2_gene";
-			MetadataTcgaNames instance = mTest;
 			String expResult = "H-miRNA 8x15kv2 ( genes )";
-			String result = instance.getMetadataTcga_DatasetName(theId);
+			String result = mTest.getMetadataTcga_DatasetName(theId);
 			assertEquals(expResult, result);
 		}
 		{
 			String theId = "genome_wide_snp_6_hg19nocnvWxy";
-			MetadataTcgaNames instance = mTest;
 			String expResult = "SNP 6 ( HG19 - no CNV - with sex chromosomes )";
-			String result = instance.getMetadataTcga_DatasetName(theId);
+			String result = mTest.getMetadataTcga_DatasetName(theId);
 			assertEquals(expResult, result);
 		}
 	}
@@ -84,16 +83,14 @@ public class MetadataTcgaNamesTest
 		System.out.println("getMetadataTcga_DiseaseName");
 		{
 			String theId = "ACC";
-			MetadataTcgaNames instance = mTest;
 			String expResult = "Adrenocortical carcinoma";
-			String result = instance.getMetadataTcga_DiseaseName(theId);
+			String result = mTest.getMetadataTcga_DiseaseName(theId);
 			assertEquals(expResult, result);
 		}
 		{
 			String theId = "UVM";
-			MetadataTcgaNames instance = mTest;
 			String expResult = "Uveal Melanoma";
-			String result = instance.getMetadataTcga_DiseaseName(theId);
+			String result = mTest.getMetadataTcga_DiseaseName(theId);
 			assertEquals(expResult, result);
 		}
 	}
@@ -107,16 +104,14 @@ public class MetadataTcgaNamesTest
 		System.out.println("getMetadataTcga_SampleTypeName");
 		{
 			String theId = "01";
-			MetadataTcgaNames instance = mTest;
 			String expResult = "Primary solid Tumor";
-			String result = instance.getMetadataTcga_SampleTypeName(theId);
+			String result = mTest.getMetadataTcga_SampleTypeName(theId);
 			assertEquals(expResult, result);
 		}
 		{
 			String theId = "61";
-			MetadataTcgaNames instance = mTest;
 			String expResult = "Cell Line Derived Xenograft Tissue";
-			String result = instance.getMetadataTcga_SampleTypeName(theId);
+			String result = mTest.getMetadataTcga_SampleTypeName(theId);
 			assertEquals(expResult, result);
 		}
 	}	

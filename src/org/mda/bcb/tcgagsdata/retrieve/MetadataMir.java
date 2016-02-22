@@ -10,23 +10,19 @@ You should have received a copy of the GNU General Public License along with thi
 
 package org.mda.bcb.tcgagsdata.retrieve;
 
-import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import org.mda.bcb.tcgagsdata.ReadZipFile;
 import org.mda.bcb.tcgagsdata.TcgaGSData;
 
 /**
  *
  * @author linux
  */
-public class MetadataMir implements Comparable<MetadataMir>
+public class MetadataMir extends ReadZipFile implements Comparable<MetadataMir>
 {
 	protected static String M_PATH = null;
 	//
@@ -51,11 +47,12 @@ public class MetadataMir implements Comparable<MetadataMir>
 	protected static TreeMap<String, TreeSet<MetadataMir>> M_MIRMAP = null;
 	protected static TreeMap<String, TreeSet<MetadataMir>> M_MIMATMAP = null;
 
-	public MetadataMir(String thePath)
+	public MetadataMir(String theZipFile)
 	{
-		if (false==thePath.equals(M_PATH))
+		super(theZipFile);
+		if (false==theZipFile.equals(M_PATH))
 		{
-			M_PATH = thePath;
+			M_PATH = theZipFile;
 			M_MIRMAP = null;
 			M_MIMATMAP = null;
 		}
@@ -67,12 +64,12 @@ public class MetadataMir implements Comparable<MetadataMir>
 		return "MetadataMir{" + "mMirId=" + mMirId + ", mMimatId=" + mMimatId + ", mMirType=" + mMirType + ", mChromosome=" + mChromosome + ", mLocationStart=" + mLocationStart + ", mLocationEnd=" + mLocationEnd + ", mStrand=" + mStrand + ", mDerivedFrom=" + mDerivedFrom + '}';
 	}
 
-	public String [] getMirList() throws IOException
+	public String [] getMirList(String theInternalPath) throws IOException
 	{
 		try
 		{
 			TcgaGSData.printVersion();
-			checkData("mirHG19map.tsv");
+			checkData(theInternalPath);
 			return M_MIRMAP.keySet().toArray(new String[0]);
 		}
 		catch(Exception exp)
@@ -84,12 +81,12 @@ public class MetadataMir implements Comparable<MetadataMir>
 		}
 	}
 
-	public String [] getMimatList() throws IOException
+	public String [] getMimatList(String theInternalPath) throws IOException
 	{
 		try
 		{
 			TcgaGSData.printVersion();
-			checkData("mirHG19map.tsv");
+			checkData(theInternalPath);
 			return M_MIMATMAP.keySet().toArray(new String[0]);
 		}
 		catch(Exception exp)
@@ -101,12 +98,12 @@ public class MetadataMir implements Comparable<MetadataMir>
 		}
 	}
 	
-	public MetadataMir [] getMetadata_miRNA_mir(String theMirId) throws IOException
+	public MetadataMir [] getMetadata_miRNA_mir(String theMirId, String theInternalPath) throws IOException
 	{
 		try
 		{
 			TcgaGSData.printVersion();
-			checkData("mirHG19map.tsv");
+			checkData(theInternalPath);
 			return M_MIRMAP.get(theMirId).toArray(new MetadataMir[0]);
 		}
 		catch(Exception exp)
@@ -118,12 +115,12 @@ public class MetadataMir implements Comparable<MetadataMir>
 		}
 	}
 
-	public MetadataMir [] getMetadata_miRNA_mimat(String theMimatId) throws IOException
+	public MetadataMir [] getMetadata_miRNA_mimat(String theMimatId, String theInternalPath) throws IOException
 	{
 		try
 		{
 			TcgaGSData.printVersion();
-			checkData("mirHG19map.tsv");
+			checkData(theInternalPath);
 			return M_MIMATMAP.get(theMimatId).toArray(new MetadataMir[0]);
 		}
 		catch(Exception exp)
@@ -135,47 +132,11 @@ public class MetadataMir implements Comparable<MetadataMir>
 		}
 	}
 	
-	protected void checkData(String theFile) throws IOException
+	protected void checkData(String theInternalPath) throws IOException
 	{
 		if (null==M_MIRMAP)
 		{
-			MetadataMir.M_MIRMAP = new TreeMap<>();
-			MetadataMir.M_MIMATMAP = new TreeMap<>();
-			File input = new File(M_PATH, theFile);
-			if (input.exists())
-			{
-				try (BufferedReader br = Files.newBufferedReader(
-						Paths.get(input.getAbsolutePath()),
-						Charset.availableCharsets().get("ISO-8859-1")))
-				{
-					String line = br.readLine();
-					populateHeaderIndexes(line);
-					line = br.readLine();
-					while (null != line)
-					{
-						String[] splitted = line.split("\t", -1);
-						MetadataMir mir = makeMetadata(splitted);
-						//
-						TreeSet<MetadataMir> myset = M_MIMATMAP.get(mir.mMimatId);
-						if (null==myset)
-						{
-							myset = new TreeSet<>();
-						}
-						myset.add(mir);
-						M_MIMATMAP.put(mir.mMimatId, myset);
-						//
-						myset = M_MIRMAP.get(mir.mMirId);
-						if (null==myset)
-						{
-							myset = new TreeSet<>();
-						}
-						myset.add(mir);
-						M_MIRMAP.put(mir.mMirId, myset);
-						//
-						line = br.readLine();
-					}
-				}
-			}
+			processFile(theInternalPath);
 		}
 	}
 
@@ -217,5 +178,39 @@ public class MetadataMir implements Comparable<MetadataMir>
 			result = this.mMimatId.compareTo(o.mMimatId);
 		}
 		return result;
+	}
+
+	@Override
+	protected boolean processLine(String theLine)
+	{
+		if (null==M_MIRMAP)
+		{
+			// first line
+			MetadataMir.M_MIRMAP = new TreeMap<>();
+			MetadataMir.M_MIMATMAP = new TreeMap<>();
+			populateHeaderIndexes(theLine);
+		}
+		else
+		{
+			String[] splitted = theLine.split("\t", -1);
+			MetadataMir mir = makeMetadata(splitted);
+			//
+			TreeSet<MetadataMir> myset = M_MIMATMAP.get(mir.mMimatId);
+			if (null==myset)
+			{
+				myset = new TreeSet<>();
+			}
+			myset.add(mir);
+			M_MIMATMAP.put(mir.mMimatId, myset);
+			//
+			myset = M_MIRMAP.get(mir.mMirId);
+			if (null==myset)
+			{
+				myset = new TreeSet<>();
+			}
+			myset.add(mir);
+			M_MIRMAP.put(mir.mMirId, myset);
+		}
+		return true;
 	}
 }

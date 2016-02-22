@@ -17,6 +17,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import org.mda.bcb.tcgagsdata.CallFromR;
 
 /**
  *
@@ -24,8 +25,8 @@ import static org.junit.Assert.*;
  */
 public class MetadataPopTest
 {
-	public String mDir = "/mnt/hgfs/code/development/TcgaGSData/";
-	public MetadataPop mTest = null;
+	public String mDir = "/mnt/hgfs/code/development/GENE_REPORT_2015_12_11.zip";
+	public CallFromR mTest = null;
 	
 	public MetadataPopTest()
 	{
@@ -44,7 +45,7 @@ public class MetadataPopTest
 	@Before
 	public void setUp()
 	{
-		mTest = new MetadataPop(new File(mDir, "data").getAbsolutePath());
+		mTest = new CallFromR(mDir);
 	}
 	
 	@After
@@ -52,10 +53,10 @@ public class MetadataPopTest
 	{
 	}
 
-	protected String getValue(String theId)
+	protected String getValue(MetadataPop theResult, String theId)
 	{
-		int index = java.util.Arrays.asList(mTest.mIds).indexOf(theId);
-		return mTest.mValues[index];
+		int index = java.util.Arrays.asList(theResult.mIds).indexOf(theId);
+		return theResult.mValues[index];
 	}
 	
 	/**
@@ -65,12 +66,9 @@ public class MetadataPopTest
 	public void testGetMetadataPop_BarcodeDisease() throws Exception
 	{
 		System.out.println("getMetadataPop_BarcodeDisease");
-		MetadataPop instance = mTest;
-		boolean expResult = true;
-		boolean result = instance.getMetadataPop_BarcodeDisease();
-		assertEquals(expResult, result);
-		assertEquals("OV", getValue("TCGA-01-0628-11A-01D-0356-01"));
-		assertEquals("CESC", getValue("TCGA-ZX-AA5X-10A-01D-A42R-09"));
+		MetadataPop result = mTest.getMetadataPop_BarcodeDisease();
+		assertEquals("OV", getValue(result, "TCGA-01-0628-11A-01D-0356-01"));
+		assertEquals("CESC", getValue(result, "TCGA-ZX-AA5X-10A-01D-A42R-09"));
 	}
 
 	/**
@@ -80,12 +78,9 @@ public class MetadataPopTest
 	public void testGetMetadataPop_BarcodeSamplecode() throws Exception
 	{
 		System.out.println("getMetadataPop_BarcodeSamplecode");
-		MetadataPop instance = mTest;
-		boolean expResult = true;
-		boolean result = instance.getMetadataPop_BarcodeSamplecode();
-		assertEquals(expResult, result);
-		assertEquals("11", getValue("TCGA-01-0628-11A-01D-0356-01"));
-		assertEquals("10", getValue("TCGA-ZX-AA5X-10A-01D-A42R-09"));
+		MetadataPop result = mTest.getMetadataPop_BarcodeSamplecode();
+		assertEquals("11", getValue(result, "TCGA-01-0628-11A-01D-0356-01"));
+		assertEquals("10", getValue(result, "TCGA-ZX-AA5X-10A-01D-A42R-09"));
 	}
 
 	/**
@@ -95,11 +90,8 @@ public class MetadataPopTest
 	public void testGetMetadataPop_PatientDisease() throws Exception
 	{
 		System.out.println("getMetadataPop_PatientDisease");
-		MetadataPop instance = mTest;
-		boolean expResult = true;
-		boolean result = instance.getMetadataPop_PatientDisease();
-		assertEquals(expResult, result);
-		assertEquals("OV", getValue("TCGA-01-0628"));
-		assertEquals("CESC", getValue("TCGA-ZX-AA5X"));
+		MetadataPop result = mTest.getMetadataPop_PatientDisease();
+		assertEquals("OV", getValue(result, "TCGA-01-0628"));
+		assertEquals("CESC", getValue(result, "TCGA-ZX-AA5X"));
 	}
 }

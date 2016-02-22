@@ -10,14 +10,10 @@ You should have received a copy of the GNU General Public License along with thi
 
 package org.mda.bcb.tcgagsdata.neighbors;
 
-import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import org.mda.bcb.tcgagsdata.ReadZipFile;
 import org.mda.bcb.tcgagsdata.TcgaGSData;
 import org.mda.bcb.tcgagsdata.retrieve.MetadataGene;
 
@@ -25,7 +21,7 @@ import org.mda.bcb.tcgagsdata.retrieve.MetadataGene;
  *
  * @author linux
  */
-public class FindGeneScoreNeighbors_Mixin
+public class FindGeneScoreNeighbors_Mixin extends ReadZipFile
 {
 	protected String mMapFile = null;
 	protected String mPath = null;
@@ -35,11 +31,20 @@ public class FindGeneScoreNeighbors_Mixin
 	public int mIndexLocationStart = -1;
 	public int mIndexLocationEnd = -1;
 	public int mIndexStrand = -1;
+	//
+	protected boolean mFirstLine = true;
+	protected ArrayList<MetadataGene> mList = null;
+	protected long mMin = -1;
+	protected long mMax = -1;
+	protected String mChromosome = null;
+	protected String mStrand = null;
+
 	
-	public FindGeneScoreNeighbors_Mixin(String theMapFile, String theDirectory)
+	public FindGeneScoreNeighbors_Mixin(String theMapFile, String theZipFile)
 	{
+		super(theZipFile);
 		mMapFile = theMapFile;
-		mPath = theDirectory;
+		mPath = theZipFile;
 	}
 	
 	public void populateHeaderLinesGeneric(String theLine)
@@ -88,32 +93,39 @@ public class FindGeneScoreNeighbors_Mixin
 	
 	public MetadataGene [] findNeighbors(long theMin, long theMax, String theChromosome, String theStrand) throws IOException
 	{
-		ArrayList<MetadataGene> list = new ArrayList<>();
 		long start = System.currentTimeMillis();
-		File input = new File(mPath, mMapFile);
-		if (input.exists())
+		mFirstLine = true;
+		mList = new ArrayList<>();
+		mMin = theMin;
+		mMax = theMax;
+		mChromosome = theChromosome;
+		mStrand = theStrand;
+		processFile(mMapFile);
+		long finish = System.currentTimeMillis();
+		TcgaGSData.printWithFlag("FindGeneScoreNeighbors_Mixin findNeighbors retrieved " + mList.size() + " elements for in " + ((finish - start) / 1000.0) + " seconds");
+		ArrayList<MetadataGene> list = mList;
+		mList = null;
+		return list.toArray(new MetadataGene[0]);
+	}
+
+	@Override
+	protected boolean processLine(String theLine)
+	{
+		
+		if (true==mFirstLine)
 		{
-			try (BufferedReader br = Files.newBufferedReader(
-					Paths.get(input.getAbsolutePath()),
-					Charset.availableCharsets().get("ISO-8859-1")))
+			mFirstLine = false;
+			populateHeaderLinesGeneric(theLine);
+		}
+		else
+		{
+			String[] splitted = theLine.split("\t", -1);
+			MetadataGene mdg = matchesParameters(splitted, mMin, mMax, mChromosome, mStrand);
+			if (null!=mdg)
 			{
-				String line = br.readLine();
-				populateHeaderLinesGeneric(line);
-				line = br.readLine();
-				while (null != line)
-				{
-					String[] splitted = line.split("\t", -1);
-					MetadataGene mdg = matchesParameters(splitted, theMin, theMax, theChromosome, theStrand);
-					if (null!=mdg)
-					{
-						list.add(mdg);
-					}
-					line = br.readLine();
-				}
+				mList.add(mdg);
 			}
 		}
-		long finish = System.currentTimeMillis();
-		TcgaGSData.printWithFlag("FindGeneScoreNeighbors_Mixin findNeighbors retrieved " + list.size() + " elements for in " + ((finish - start) / 1000.0) + " seconds");
-		return list.toArray(new MetadataGene[0]);
+		return true;
 	}
 }

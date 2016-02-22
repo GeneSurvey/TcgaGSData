@@ -10,113 +10,52 @@ You should have received a copy of the GNU General Public License along with thi
 
 package org.mda.bcb.tcgagsdata.retrieve;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.mda.bcb.tcgagsdata.GSStringUtils;
+import org.mda.bcb.tcgagsdata.ReadZipFile;
 import org.mda.bcb.tcgagsdata.TcgaGSData;
 
 /**
  *
  * @author tdcasasent
  */
-public class GetDataGeneEq
+public class GetDataGeneEq extends ReadZipFile
 {
 	public String mPath = null;
 	public int mValueSize = 0;
 	public int mSampleSize = 0;
 	public double [] mValues = null;
 	public String [] mSamples = null;
+	//
+	protected String mRequestedGene = null;
 
-	public GetDataGeneEq(String thePath)
+	public GetDataGeneEq(String theZipFile)
 	{
+		super(theZipFile);
 		TcgaGSData.printVersion();
-		mPath = thePath;
+		mPath = theZipFile;
 	}
 
-	public boolean getData_RnaSeq2(String theGene) throws IOException
-	{
-		return getData(theGene, "illuminahiseq_rnaseqv2_gene");
-	}
-
-	public boolean getData_RnaSeq(String theGene) throws IOException
-	{
-		return getData(theGene, "illuminahiseq_rnaseq_uncGeneRPKM");
-	}
-
-	public boolean getData_SNP6(String theGene) throws IOException
-	{
-		return getData(theGene, "genome_wide_snp_6_hg19nocnvWxy");
-	}
-
-	public boolean getData_Meth450(String theGene) throws IOException
-	{
-		return getData(theGene, "humanmethylation450_level3");
-	}
-
-	public boolean getData_Meth27(String theGene) throws IOException
-	{
-		return getData(theGene, "humanmethylation27_hg19Wxy");
-	}
-
-	public boolean getData_miRNASeq(String theGene) throws IOException
-	{
-		return getData(theGene, "illuminahiseq_mirnaseq_isoform");
-	}
-
-	public boolean getData(String theRequestedGene, String thePlatform) throws IOException
+	public boolean getData(String theRequestedGene, String theInternalPath) throws IOException
 	{
 		mValueSize = 0;
 		mSampleSize = 0;
 		mValues = null;
 		mSamples = null;
-		boolean found = false;
+		mRequestedGene = theRequestedGene;
 		long start = System.currentTimeMillis();
-		File input = new File(new File(mPath, thePlatform), "matrix_data_" + DigestUtils.md5Hex(theRequestedGene).substring(0, 2) + ".tsv");
-		if (input.exists())
-		{
-			//String platform = "genome_wide_snp_6_hg19nocnvWxy";
-			//String platform = "humanmethylation450_level3";
-			try(BufferedReader br = Files.newBufferedReader(
-					Paths.get(input.getAbsolutePath()),
-					Charset.availableCharsets().get("ISO-8859-1")))
-			{
-				// first line samples
-				String line = br.readLine();
-				{
-					mSamples = GSStringUtils.afterTab(line).split("\t", -1);
-					mSampleSize = mSamples.length;
-				}
-				line = br.readLine();
-				while(null!=line)
-				{
-					String gene = GSStringUtils.beforeTab(line);
-					if (theRequestedGene.equals(gene))
-					{
-						found = true;
-						mValues = convertToDouble(GSStringUtils.afterTab(line).split("\t", -1));
-						mValueSize = mValues.length;
-						line = null;
-					}
-					else
-					{
-						line = br.readLine();
-					}
-				}
-			}
-		}
+		String input = theInternalPath + "/matrix_data_" + DigestUtils.md5Hex(theRequestedGene).substring(0, 2) + ".tsv";
+		boolean found = processFile(input);
 		long finish = System.currentTimeMillis();
 		if(true==found)
 		{
-			TcgaGSData.printWithFlag("Gene " + theRequestedGene + " retrieved for " + thePlatform + " in " + ((finish-start)/1000.0) + " seconds");
+			TcgaGSData.printWithFlag("Gene " + theRequestedGene + " retrieved for " + theInternalPath + " in " + ((finish-start)/1000.0) + " seconds");
 		}
 		else
 		{
-			TcgaGSData.printWithFlag("Gene " + theRequestedGene + " not found for " + thePlatform + " in " + ((finish-start)/1000.0) + " seconds");
+			TcgaGSData.printWithFlag("Gene " + theRequestedGene + " not found for " + theInternalPath + " in " + ((finish-start)/1000.0) + " seconds");
 		}
 		return found;
 	}
@@ -141,5 +80,28 @@ public class GetDataGeneEq
 			}
 		}
 		return doubleArray;
+	}
+
+	@Override
+	protected boolean processLine(String theLine)
+	{
+		boolean keepLooking = true;
+		// first line samples
+		if (null==mSamples)
+		{
+			mSamples = GSStringUtils.afterTab(theLine).split("\t", -1);
+			mSampleSize = mSamples.length;
+		}
+		else
+		{
+			String gene = GSStringUtils.beforeTab(theLine);
+			if (mRequestedGene.equals(gene))
+			{
+				keepLooking = false;
+				mValues = convertToDouble(GSStringUtils.afterTab(theLine).split("\t", -1));
+				mValueSize = mValues.length;
+			}
+		}
+		return keepLooking;
 	}
 }
