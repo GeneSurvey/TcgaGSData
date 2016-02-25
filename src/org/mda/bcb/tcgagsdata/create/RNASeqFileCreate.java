@@ -13,12 +13,16 @@ package org.mda.bcb.tcgagsdata.create;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 /**
  *
@@ -103,37 +107,45 @@ public class RNASeqFileCreate
 		mLineData.add(makeLine(geneSymbol, geneId, index, chromosome, startingCoord, endingCoord, strand));
 	}
 	
-	public void fileConvert(String theSource, String theDest) throws IOException, Exception
+	public void fileConvert(String theSourceZip, String theFile, String theDest) throws IOException, Exception
 	{
-		System.out.println("Convert source = " + theSource);
+		System.out.println("Convert theSourceZip = " + theSourceZip);
+		System.out.println("Convert theFile = " + theFile);
 		System.out.println("Convert dest = " + theDest);
 		mLineData.clear();
 		mLineHeaders = null;
 		TreeMap<String, Integer> headers = null;
 		// open file for reading
 		int line = 0;
-		try(BufferedReader br = Files.newBufferedReader(Paths.get(theSource), Charset.availableCharsets().get("ISO-8859-1")))
+		try (ZipFile zf = new ZipFile(theSourceZip))
 		{
-			headers = processHeaders(br.readLine());
-			line = line + 1;
-			// make headers
-			mLineHeaders = makeLine("gene_symbol", "gene_id", "version_index", "chromosome", "location_start", "location_end", "strand");
-			String strLine = br.readLine();
-			while(null!=strLine)
+			ZipEntry ze = zf.getEntry(theFile);
+			try (InputStream is = zf.getInputStream(ze))
 			{
-				//System.out.println("processing line " + line);
-				// process lines
-				String [] splitted = strLine.split("\t", -1);
-				if(columnsEqual(splitted, headers))
+				try(BufferedReader br = new BufferedReader(new InputStreamReader(is)))
 				{
-					String gene = splitted[headers.get("FeatureID")];
-					String geneLocus = splitted[headers.get("GeneLocus")];
-					parseAndMakeLine(gene, geneLocus);
+					headers = processHeaders(br.readLine());
+					line = line + 1;
+					// make headers
+					mLineHeaders = makeLine("gene_symbol", "gene_id", "version_index", "chromosome", "location_start", "location_end", "strand");
+					String strLine = br.readLine();
+					while(null!=strLine)
+					{
+						//System.out.println("processing line " + line);
+						// process lines
+						String [] splitted = strLine.split("\t", -1);
+						if(columnsEqual(splitted, headers))
+						{
+							String gene = splitted[headers.get("FeatureID")];
+							String geneLocus = splitted[headers.get("GeneLocus")];
+							parseAndMakeLine(gene, geneLocus);
+						}
+						strLine = br.readLine();
+						line = line + 1;
+					}
+					System.out.println("processed " + line + " lines");
 				}
-				strLine = br.readLine();
-				line = line + 1;
 			}
-			System.out.println("processed " + line + " lines");
 			// open file for writing
 			try(BufferedWriter bw = Files.newBufferedWriter(Paths.get(theDest), Charset.availableCharsets().get("ISO-8859-1")))
 			{
