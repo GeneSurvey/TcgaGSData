@@ -1,5 +1,5 @@
 /*
-TCGAGeneReport Copyright 2014, 2015 University of Texas MD Anderson Cancer Center
+TcgaGSData Copyright 2014, 2015, 2016 University of Texas MD Anderson Cancer Center
 
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 2 of the License, or (at your option) any later version.
 
@@ -337,6 +337,31 @@ public class MetadataGene extends ReadZipFile
 	//// HG shared
 	////////////////////////////////////////////////////////////////////////////
 	
+	protected void reduceKeys(HashMap<String, ArrayList<MetadataGene>> theMap)
+	{
+		ArrayList<String> origKeys = new ArrayList<>(theMap.keySet());
+		ArrayList<String> reduKeys = new ArrayList<>();
+		for(String key : origKeys)
+		{
+			reduKeys.add(key.split("\\|", -1)[0]);
+		}
+		for(int x=0;x<origKeys.size();x++)
+		{
+			String longO = origKeys.get(x);
+			String longR = reduKeys.get(x);
+			if ((reduKeys.indexOf(longR))==(reduKeys.lastIndexOf(longR)))
+			{
+				ArrayList<MetadataGene> values = theMap.get(longO);
+				for (MetadataGene mg : values)
+				{
+					mg.mGeneSymbol = longR;
+				}
+				theMap.remove(longO);
+				theMap.put(longR, values);
+			}
+		}
+	}
+	
 	protected void loadHGdata(String theFile, boolean the19flag) throws IOException
 	{
 		mFirstLine = true;
@@ -344,6 +369,15 @@ public class MetadataGene extends ReadZipFile
 		mHG18flag = !the19flag;
 		mHG19flag = the19flag;
 		processFile(theFile);
+		// reduce the keys for HG18 and HG19 files
+		if (mHG18flag)
+		{
+			reduceKeys(M_HG18_SYMBOL_TO_METADATA);
+		}
+		else if (mHG19flag)
+		{
+			reduceKeys(M_HG19_SYMBOL_TO_METADATA);
+		}
 	}
 
 	protected void populateHeaderLinesHg(String theLine)

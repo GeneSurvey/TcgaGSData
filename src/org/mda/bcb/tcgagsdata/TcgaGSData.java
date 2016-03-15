@@ -1,5 +1,5 @@
 /*
-TCGAGeneReport Copyright 2014, 2015 University of Texas MD Anderson Cancer Center
+TcgaGSData Copyright 2014, 2015, 2016 University of Texas MD Anderson Cancer Center
 
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 2 of the License, or (at your option) any later version.
 
@@ -49,8 +49,8 @@ public class TcgaGSData
 
 	public static String printVersion()
 	{
-		TcgaGSData.printWithFlag("TcgaGSData 2016-01-11-1250");
-		return "TcgaGSData 2016-01-11-1250";
+		TcgaGSData.printWithFlag("TcgaGSData 2016-03-10-1347");
+		return "TcgaGSData 2016-03-10-1347";
 	}
 
 	//TESTmain main
@@ -59,6 +59,20 @@ public class TcgaGSData
 		System.out.println("If you see this message in production, it is an ERROR and TcgaGSData was compiled wrong");
 		try
 		{
+			TcgaGSData.printVersion();
+			String converted = "/mnt/hgfs/rsrch1_bea/DEV/GenSurveyDev/converted";
+			String clinical = "/mnt/hgfs/rsrch1_bea/DEV/GenSurveyDev/clinical";
+			String combined = "/mnt/hgfs/rsrch1_bea/DEV/GenSurveyDev/combined";
+			String clinicalOutputFile = "/mnt/hgfs/rsrch1_bea/DEV/GenSurveyDev/combined/combined_clinical.tsv";
+			String iddata = "/mnt/hgfs/rsrch1_bea/DEV/GenSurveyDev/iddata";
+			String data = "/mnt/hgfs/rsrch1_bea/DEV/GenSurveyDev/data";
+			String metadata = "/mnt/hgfs/rsrch1_bea/DEV/GenSurveyDev/metadata";
+			boolean download = false;
+			boolean others = true;
+			long mutations = combineFiles(converted, combined, "mutations", "*", "Level_2", iddata, data, 0.0);
+			long platform_mutations = platformFiles(combined, "mutations");
+			long genome_wide_snp_6_hg19nocnvWxy = combineFiles(converted, combined, "snp", "genome_wide_snp_6_hg19nocnvWxy", "Level_3", iddata, data, Double.NaN);
+			long platform_genome_wide_snp_6_hg19nocnvWxy = platformFiles(combined, "genome_wide_snp_6_hg19nocnvWxy");
 		}
 		catch (Exception exp)
 		{
@@ -122,12 +136,14 @@ public class TcgaGSData
 				long platform_humanmethylation450_level3 = platformFiles(combined, "humanmethylation450_level3");
 				long platform_humanmethylation27_hg19Wxy = platformFiles(combined, "humanmethylation27_hg19Wxy");
 				long platform_illuminahiseq_mirnaseq_isoform = platformFiles(combined, "illuminahiseq_mirnaseq_isoform");
+				long platform_mutations = platformFiles(combined, "mutations");
 				TcgaGSData.printWithFlag("platform_illuminahiseq_rnaseq_uncGeneRPKM= " + (platform_illuminahiseq_rnaseq_uncGeneRPKM / 1000.0 / 60.0 / 60.0) + " hours");
 				TcgaGSData.printWithFlag("platform_illuminahiseq_rnaseqv2_gene= " + (platform_illuminahiseq_rnaseqv2_gene / 1000.0 / 60.0 / 60.0) + " hours");
 				TcgaGSData.printWithFlag("platform_genome_wide_snp_6_hg19nocnvWxy= " + (platform_genome_wide_snp_6_hg19nocnvWxy / 1000.0 / 60.0 / 60.0) + " hours");
 				TcgaGSData.printWithFlag("platform_humanmethylation450_level3= " + (platform_humanmethylation450_level3 / 1000.0 / 60.0 / 60.0) + " hours");
 				TcgaGSData.printWithFlag("platform_humanmethylation27_hg19Wxy= " + (platform_humanmethylation27_hg19Wxy / 1000.0 / 60.0 / 60.0) + " hours");
 				TcgaGSData.printWithFlag("platform_illuminahiseq_mirnaseq_isoform= " + (platform_illuminahiseq_mirnaseq_isoform / 1000.0 / 60.0 / 60.0) + " hours");
+				TcgaGSData.printWithFlag("platform_mutations= " + (platform_mutations / 1000.0 / 60.0 / 60.0) + " hours");
 				// setup barcode/patient metadata
 				File [] combinedDiseaseSamplesFiles = findFiles(combined, "disease_sample.tsv");
 				String metadataFile = Metadata.findMetadataFile(new File(metadata));
