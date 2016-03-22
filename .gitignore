@@ -1,3 +1,5 @@
 dist
 build
 nbproject/private
+data/TCGA.Sept2010.09202010.gaf
+data/meth450map.tsv
