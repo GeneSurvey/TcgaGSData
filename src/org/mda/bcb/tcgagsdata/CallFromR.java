@@ -22,7 +22,9 @@ import org.mda.bcb.tcgagsdata.retrieve.GetDataClinical;
 import org.mda.bcb.tcgagsdata.retrieve.GetDataMatrix;
 import org.mda.bcb.tcgagsdata.retrieve.GetImputedNAsMatrix;
 import org.mda.bcb.tcgagsdata.retrieve.GetMapGeneEq;
+import org.mda.bcb.tcgagsdata.retrieve.GetMatrixPlatform;
 import org.mda.bcb.tcgagsdata.retrieve.GetNamesGeneEq;
+import org.mda.bcb.tcgagsdata.retrieve.GetTime;
 import org.mda.bcb.tcgagsdata.retrieve.MetadataGene;
 import org.mda.bcb.tcgagsdata.retrieve.MetadataMir;
 import org.mda.bcb.tcgagsdata.retrieve.MetadataPop;
@@ -48,6 +50,29 @@ public class CallFromR
 		String version = TcgaGSData.printVersion();
 		System.out.println(version);
 		return version;
+	}
+
+	////////////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////
+	
+	protected String getValue_internal(String theInternalPath) throws IOException
+	{
+		GetTime call = new GetTime(mZipFile);
+		if (true==call.getTime(theInternalPath))
+		{
+			return call.mTime;
+		}
+		else
+		{
+			return null;
+		}
+	}
+	
+	public String getValue_Time() throws IOException
+	{
+		return getValue_internal("combined/time.txt");
 	}
 
 	////////////////////////////////////////////////////////////////////////////
@@ -201,6 +226,59 @@ public class CallFromR
 	public GetDataMatrix getDataMatrix_miRNASeq(String [] theGenes) throws IOException
 	{
 		return getDataMatrix_internal(theGenes, "combined/illuminahiseq_mirnaseq_isoform", "combined/illuminahiseq_mirnaseq_isoform/gene_list.tsv");
+	}
+
+	////////////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////
+
+	protected GetMatrixPlatform getDataMatrixPlatform_internal(String thePlatformInternalPath, String theNamesInternalPath) throws IOException
+	{
+		GetMatrixPlatform call = new GetMatrixPlatform(mZipFile);
+		if (true==call.getDataMatrix(thePlatformInternalPath, theNamesInternalPath))
+		{
+			return call;
+		} 
+		else
+		{
+			return null;
+		}
+	}
+	
+	public GetMatrixPlatform getDataMatrix_MutationsPlatform() throws IOException
+	{
+		return getDataMatrixPlatform_internal("combined/mutations/platform.tsv", "combined/mutations/gene_list.tsv");
+	}
+
+	public GetMatrixPlatform getDataMatrix_RnaSeq2Platform() throws IOException
+	{
+		return getDataMatrixPlatform_internal("combined/illuminahiseq_rnaseqv2_gene/platform.tsv", "combined/illuminahiseq_rnaseqv2_gene/gene_list.tsv");
+	}
+
+	public GetMatrixPlatform getDataMatrix_RnaSeqPlatform() throws IOException
+	{
+		return getDataMatrixPlatform_internal("combined/illuminahiseq_rnaseq_uncGeneRPKM/platform.tsv", "combined/illuminahiseq_rnaseq_uncGeneRPKM/gene_list.tsv");
+	}
+
+	public GetMatrixPlatform getDataMatrix_SNP6Platform() throws IOException
+	{
+		return getDataMatrixPlatform_internal("combined/genome_wide_snp_6_hg19nocnvWxy/platform.tsv", "combined/genome_wide_snp_6_hg19nocnvWxy/gene_list.tsv");
+	}
+
+	public GetMatrixPlatform getDataMatrix_Meth450Platform() throws IOException
+	{
+		return getDataMatrixPlatform_internal("combined/humanmethylation450_level3/platform.tsv", "combined/humanmethylation450_level3/gene_list.tsv");
+	}
+
+	public GetMatrixPlatform getDataMatrix_Meth27Platform() throws IOException
+	{
+		return getDataMatrixPlatform_internal("combined/humanmethylation27_hg19Wxy/platform.tsv", "combined/humanmethylation27_hg19Wxy/gene_list.tsv");
+	}
+
+	public GetMatrixPlatform getDataMatrix_miRNASeqPlatform() throws IOException
+	{
+		return getDataMatrixPlatform_internal("combined/illuminahiseq_mirnaseq_isoform/platform.tsv", "combined/illuminahiseq_mirnaseq_isoform/gene_list.tsv");
 	}
 	
 	////////////////////////////////////////////////////////////////////////////

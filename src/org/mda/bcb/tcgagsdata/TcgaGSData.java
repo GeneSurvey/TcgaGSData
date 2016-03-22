@@ -24,6 +24,7 @@ import org.mda.bcb.tcgagsdata.create.Metadata;
 import org.mda.bcb.tcgagsdata.create.ProcessFile;
 import org.mda.bcb.tcgagsdata.create.ReadPlatform;
 import org.mda.bcb.tcgagsdata.create.miRnaCreate;
+import org.mda.bcb.tcgagsdata.retrieve.GetMatrixPlatform;
 
 /**
  *
@@ -49,8 +50,8 @@ public class TcgaGSData
 
 	public static String printVersion()
 	{
-		TcgaGSData.printWithFlag("TcgaGSData 2016-03-10-1347");
-		return "TcgaGSData 2016-03-10-1347";
+		TcgaGSData.printWithFlag("TcgaGSData 2016-03-17-1632");
+		return "TcgaGSData 2016-03-17-1632";
 	}
 
 	//TESTmain main
@@ -69,10 +70,31 @@ public class TcgaGSData
 			String metadata = "/mnt/hgfs/rsrch1_bea/DEV/GenSurveyDev/metadata";
 			boolean download = false;
 			boolean others = true;
-			long mutations = combineFiles(converted, combined, "mutations", "*", "Level_2", iddata, data, 0.0);
-			long platform_mutations = platformFiles(combined, "mutations");
-			long genome_wide_snp_6_hg19nocnvWxy = combineFiles(converted, combined, "snp", "genome_wide_snp_6_hg19nocnvWxy", "Level_3", iddata, data, Double.NaN);
-			long platform_genome_wide_snp_6_hg19nocnvWxy = platformFiles(combined, "genome_wide_snp_6_hg19nocnvWxy");
+			//long mutations = combineFiles(converted, combined, "mutations", "*", "Level_2", iddata, data, 0.0);
+			//long platform_mutations = platformFiles(combined, "mutations");
+			//long genome_wide_snp_6_hg19nocnvWxy = combineFiles(converted, combined, "snp", "genome_wide_snp_6_hg19nocnvWxy", "Level_3", iddata, data, Double.NaN);
+			//long platform_genome_wide_snp_6_hg19nocnvWxy = platformFiles(combined, "genome_wide_snp_6_hg19nocnvWxy");
+			
+			String zipFile = "/mnt/hgfs/rsrch1_bea/GENE_REPORT/STAGE/GeneSurvey.zip";
+			CallFromR cfr = new CallFromR(zipFile);
+			System.out.println("Timestamp = " + cfr.getValue_Time());
+			GetMatrixPlatform gdm = cfr.getDataMatrix_RnaSeq2Platform();
+			System.out.println("gene count = " + gdm.mGenes.length);
+			System.out.println("sample count = " + gdm.mSamples.length);
+			for(int x=0;x<6;x++)
+			{
+				System.out.print("\t" + gdm.mSamples[x]);
+			}
+			System.out.println("");
+			for(int y=0;y<6;y++)
+			{
+				System.out.println(gdm.mGenes[y]);
+				for(int x=0;x<6;x++)
+				{
+					System.out.print("\t" + gdm.mGenesBySamplesValues[y][x]);
+				}
+				System.out.println("");
+			}			
 		}
 		catch (Exception exp)
 		{

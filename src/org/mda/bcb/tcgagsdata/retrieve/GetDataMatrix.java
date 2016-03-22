@@ -50,6 +50,10 @@ public class GetDataMatrix
 			TreeSet<String> allGenes = new TreeSet<>();
 			allGenes.addAll(Arrays.asList(lg.mGenes));
 			TreeSet<String> ts = new TreeSet<>();
+			if (null==theGenes)
+			{
+				theGenes = allGenes.toArray(new String[0]);
+			}
 			for(String gene : theGenes)
 			{
 				if (allGenes.contains(gene))

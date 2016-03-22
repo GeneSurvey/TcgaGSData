@@ -284,7 +284,20 @@ public class MetadataGene extends ReadZipFile
 		}
 		else
 		{
-			 list = new ArrayList<>();
+			for (String key : M_HG18_SYMBOL_TO_METADATA.keySet())
+			{
+				if (null==list)
+				{
+					if (key.startsWith(theGeneSymbol))
+					{
+						list = M_HG18_SYMBOL_TO_METADATA.get(key);
+					}
+				}
+			}
+			if (null==list)
+			{
+				list = new ArrayList<>();
+			}
 		}
 		long finish = System.currentTimeMillis();
 		if (true == found)
@@ -319,7 +332,20 @@ public class MetadataGene extends ReadZipFile
 		}
 		else
 		{
-			 list = new ArrayList<>();
+			for (String key : M_HG19_SYMBOL_TO_METADATA.keySet())
+			{
+				if (null==list)
+				{
+					if (key.startsWith(theGeneSymbol))
+					{
+						list = M_HG19_SYMBOL_TO_METADATA.get(key);
+					}
+				}
+			}
+			if (null==list)
+			{
+				list = new ArrayList<>();
+			}
 		}
 		long finish = System.currentTimeMillis();
 		if (true == found)
